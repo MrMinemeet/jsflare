@@ -1,8 +1,11 @@
 {
   "name": "jsflare",
   "version": "0.0.1",
+  "author": "Alexander Voglsperger",
+  "license": "MIT",
   "description": "Dynamic DNS using domain hosted on Cloudflare ",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -14,10 +17,16 @@
     "dynamic",
     "dns"
   ],
-  "author": "Alexander Voglsperger",
-  "license": "MIT",
-  "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c",
   "devDependencies": {
+    "@types/node": "~22.13.5",
     "typescript": "~5.7.3"
-  }
+  },
+  "dependencies": {
+    "cloudflare": "~4.1.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "deno": ">=1.28"
+  },
+  "packageManager": "pnpm@10.5.1+sha512.c424c076bd25c1a5b188c37bb1ca56cc1e136fbf530d98bcb3289982a08fd25527b8c9c4ec113be5e3393c39af04521dd647bcf1d0801eaf8ac6a7b14da313af"
 }

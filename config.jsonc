@@ -1,0 +1,26 @@
+{
+	// Amount of retries before giving up
+	"maxRetries": 2,
+	// Amount of seconds to wait before retrying
+	"timeout": 60,
+	"items": [
+		// Item update using token
+		{
+			"token": "ApiToken",
+			"zone": "domain1.example",
+			"record": "record.domain1.example",
+			// TTL in seconds | 1 = automatic | Value must be between 60 and 86400
+			"ttl": 1,
+			"proxied": false
+		},
+		// Item update using email and key
+		{
+			"email": "e@mail.com",
+			"key": "SecretKey",
+			"zone": "domain2.example",
+			"record": "record.domain2.example",
+			"ttl": 5,
+			"proxied": true
+		}
+	]
+}
