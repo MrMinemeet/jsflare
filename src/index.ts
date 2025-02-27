@@ -7,33 +7,44 @@ import { EmailKeyItem, loadConfig, TokenItem } from "./config.js";
 
 const SUPPORTED_RECORD_TYPES = [ "A", "AAAA" ]
 
-const config = await loadConfig();
-const ownIp = getOwnIp();
+await main();
 
-const results = await Promise.allSettled(config.items.map(item => updateEntry(item)));
 
-results
-	.filter(r => r.status === "rejected")
-	.forEach(r => {
-		const err = r.reason;
-		const errMsg = err instanceof Cloudflare.APIError ?
-			`Failed to update IP. Error code ${err.status}` : 
-			`Something went wrong: ${err.message}`;
-		console.error(errMsg);
-	});
+/**
+ * The main function of the script
+ */
+async function main() {
+	const { maxRetries, timeout, items} = await loadConfig();
+	const ownIp = getOwnIp();
+
+	const results = await Promise.allSettled(items.map(item => 
+		updateEntry(ownIp, item,  maxRetries, timeout)
+	));
+
+	results
+		.filter(r => r.status === "rejected")
+		.forEach(r => {
+			const err = r.reason;
+			console.error(`Something went wrong: ${err.message}`);
+		});
+}
 
 /**
  * Updates the IP of a DNS record in Cloudflare
  * @param item The item to update
  */
-async function updateEntry(item: TokenItem | EmailKeyItem): Promise<void> {
+async function updateEntry(ipp: Promise<string>, item: TokenItem | EmailKeyItem, maxRetries: number, timeout: number): Promise<void> {
 	const client = isTokenItem(item) ?
 		new Cloudflare({
-			apiToken: item.token
+			apiToken: item.token,
+			maxRetries,
+			timeout
 		}) :
 		new Cloudflare({
 			apiEmail: item.email,
-			apiKey: item.key
+			apiKey: item.key,
+			maxRetries,
+			timeout
 		});
 
 	// Get current DNS record for zone
@@ -54,7 +65,7 @@ async function updateEntry(item: TokenItem | EmailKeyItem): Promise<void> {
 	if (record.content == null) {
 		throw new Error(`No IP found for ${item.record} in zone ${zone.name}`);
 	}
-	const ip = await ownIp;
+	const ip = await ipp;
 	if (record.content === ip) {
 		console.info(`IP for ${item.record} in zone ${zone.name} is already up-to-date`);
 		return;
@@ -67,7 +78,7 @@ async function updateEntry(item: TokenItem | EmailKeyItem): Promise<void> {
 		proxied: item.proxied,
 	});
 
-	console.info(`Updated IP for ${item.record} in zone ${zone.name} to ${ownIp}`);
+	console.info(`Updated IP for ${item.record} in zone ${zone.name} to ${ipp}`);
 }
 
 /**

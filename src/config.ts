@@ -7,7 +7,8 @@ import * as fsp from "fs/promises";
 
 export interface Config {
 	maxRetries: number;
-	timeout: number;
+	/// Between 60 and 86400 seconds
+ 	timeout: number;
 	items: (TokenItem | EmailKeyItem)[];
 }
 export interface TokenItem {
