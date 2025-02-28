@@ -75,11 +75,11 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 }
 
 /**
- * Fetches the public IP of the machine from 'https://api.ipify.org'
+ * Fetches the public IP of the machine from 'https://ipify.org'
  * @returns The public IP of the machine
  */
 async function getOwnIp(): Promise<string> {
-	const response = await fetch("https://api.ipify.org");
+	const response = await fetch("https://api64.ipify.org");
 	return await response.text();
 }
 
