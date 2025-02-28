@@ -11,6 +11,7 @@ export interface Config {
  	timeout: number;
 	items: (TokenItem | EmailKeyItem)[];
 }
+
 export interface TokenItem {
 	token: string;
 	zone: string;
@@ -18,6 +19,7 @@ export interface TokenItem {
 	ttl: number;
 	proxied: boolean;
 }
+
 export interface EmailKeyItem {
 	email: string;
 	key: string;

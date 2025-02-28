@@ -2,8 +2,8 @@
  * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
-import Cloudflare from "cloudflare";
-import { EmailKeyItem, loadConfig, TokenItem } from "./config.js";
+import { Cloudflare } from "./CF/Cloudflare.js";
+import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
 
 const SUPPORTED_RECORD_TYPES = [ "A", "AAAA" ]
 
@@ -24,8 +24,7 @@ async function main() {
 	results
 		.filter(r => r.status === "rejected")
 		.forEach(r => {
-			const err = r.reason;
-			console.error(`Something went wrong: ${err.message}`);
+			console.error("Something went wrong:", r.status, r.reason);
 		});
 }
 
@@ -33,28 +32,22 @@ async function main() {
  * Updates the IP of a DNS record in Cloudflare
  * @param item The item to update
  */
-async function updateEntry(ipp: Promise<string>, item: TokenItem | EmailKeyItem, maxRetries: number, timeout: number): Promise<void> {
-	const client = isTokenItem(item) ?
-		new Cloudflare({
-			apiToken: item.token,
+async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKeyItem, maxRetries: number, timeout: number): Promise<void> {
+	const cf = new Cloudflare({
+		apiToken: isTokenItem(item) ? item.token : undefined,
+		apiEmail: isTokenItem(item) ? undefined : item.email,
+		apiKey: isTokenItem(item) ? undefined : item.key,
+		connectionOptions: {
 			maxRetries,
-			timeout
-		}) :
-		new Cloudflare({
-			apiEmail: item.email,
-			apiKey: item.key,
-			maxRetries,
-			timeout
-		});
+			timeout,
+		}
+	})
 
 	// Get current DNS record for zone
-	const zone = await client.zones.get({zone_id: item.zone});
-	const record = (await client.dns.records.list({ zone_id: zone.id }))
-		.result.find(rec => 
-			rec.type != null &&
-			SUPPORTED_RECORD_TYPES.includes(rec.type) &&
-			rec.name === item.record
-		);
+	const zone = await cf.getZones(item.zone);
+	const record = (await cf.getDnsRecords(zone.id, item.record))
+		.find(rec => rec.type != null && SUPPORTED_RECORD_TYPES.includes(rec.type))
+
 	
 	if (record == null) {
 		console.warn(`No record found for ${item.record} in zone ${zone.name}`);
@@ -65,20 +58,20 @@ async function updateEntry(ipp: Promise<string>, item: TokenItem | EmailKeyItem,
 	if (record.content == null) {
 		throw new Error(`No IP found for ${item.record} in zone ${zone.name}`);
 	}
-	const ip = await ipp;
+	const ip = await ipPromise;
 	if (record.content === ip) {
 		console.info(`IP for ${item.record} in zone ${zone.name} is already up-to-date`);
 		return;
 	}
 	
 	// Update the record
-	await client.dns.records.update(record.id, {
-		zone_id: zone.id,
-		content: ip,
-		proxied: item.proxied,
-	});
+	await cf.updateDnsRecord(zone.id, record.id, {
+			ip: ip,
+			proxied: record.proxied,
+			ttl: record.ttl,
+		});
 
-	console.info(`Updated IP for ${item.record} in zone ${zone.name} to ${ipp}`);
+	console.info(`Updated IP for ${item.record} in zone ${zone.name} to ${ip}`);
 }
 
 /**
