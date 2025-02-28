@@ -5,7 +5,7 @@
 		"esModuleInterop": true,
 		"strict": true,
 		"module": "nodenext",
-		"target": "ES2020",
+		"target": "ES2022",
 		"noImplicitAny": true,
 		"strictNullChecks": true,
 		"strictPropertyInitialization": true,
@@ -15,6 +15,8 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
+		"removeComments": true,
+		"allowJs": false
 	},
 	"include": [
 		"src/**/*"
