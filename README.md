@@ -7,7 +7,19 @@ Cloudflare hosts your DNS records (besidees a bunch of other things). This scrip
 ## Usage guide
 The script is intended to be directly called from the command line - although you could import it as a module if you wanted to.
 
-The script requires a configuration file `config.jsonc` or `config.json` to be present. Take the provided [example_config.jsonc](example_config.jsonc) as an example and fill in the required fields. 
+The script requires a configuration file `config.jsonc` or `config.json` to be present. Take the provided [example_config.jsonc](example_config.jsonc) as an example and fill in the required fields.
+
+To run the script with Node.js you have to install the dependencies and transpile the code first.
+This can be done with the following commands. (The repository uses [pnpm](https://pnpm.io/) as package manager, but you can use `npm` as well.)
+```bash
+pnpm install
+pnpm run build
+```
+
+The actual script is then found in the `dist` directory and can be run with:
+```bash
+node dist/index.js
+```
 
 ## API access & permissions
 The script can work with either the legacy API keys or the new API tokens.
@@ -22,6 +34,41 @@ To use the legacy API keys, you need to provide the `email` and `key` fields in 
 To use the API tokens, you need to provide `token` fields in the configuration file. The token can be generated in the dashboard.
 The token needs the following permission:
 - All zones - **Zone:Read, DNS:Edit**
+
+## Periodic updates using Systemd
+To run the script periodically, you can use a systemd timer and service. There are other ways to run the script periodically, but this is the most common way on most Linux systems.
+
+### jsflare.timer
+To call the script every *N* minutes, create a file `/etc/systemd/system/jsflare.timer` with the following content:
+```ini
+[Unit]
+Description=Run JSflare DNS update service
+
+[Timer]
+# Run every 10 minutes
+OnCalendar=*:0/10
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+### jsflare.service
+The service that actually runs the script should be created in `/etc/systemd/system/jsflare.service`.
+The value of `WorkingDirectory` should be the path to the repository was cloned to.
+```ini
+[Unit]
+Description=JSflare DNS Update Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=<SET THIS VALUE>
+ExecStart=/usr/bin/node ./dist/index.js
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ---
 
