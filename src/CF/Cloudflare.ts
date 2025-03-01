@@ -4,7 +4,7 @@
  */
 
 import axios, { HttpStatusCode } from "axios";
-import type { CloudflareOptions, ConnectionOptions, DnsRecord, RecordData, Zone } from "./CloudflareTypes.js";
+import type { CloudflareOptions, DnsRecord, RecordData, Zone } from "./CloudflareTypes.js";
 
 /**
  * Basic class for interacting with the Cloudflare API
@@ -16,15 +16,16 @@ import type { CloudflareOptions, ConnectionOptions, DnsRecord, RecordData, Zone 
  */
 export class Cloudflare {
 	private static readonly API_BASE_URL = "https://api.cloudflare.com/client/v4";
+	private static readonly RETRY_DELAY = 5000;
 
-	private readonly connectionOptions: ConnectionOptions;
 	private readonly headers: Record<string, string> = {};
+	private readonly timeout: number;
+	private readonly maxRetries: number;
 
 	constructor(options: CloudflareOptions) {
 		if (!Cloudflare.verifyOptions(options)) {
 			throw new Error("Options invalid! Has to provide either apiToken, or apiEmail and cloudflareTypes");
 		}
-		this.connectionOptions = options.connectionOptions;
 
 		if(options.apiToken != null) {
 			this.headers["Authorization"] = `Bearer ${options.apiToken}`;
@@ -33,6 +34,9 @@ export class Cloudflare {
 			this.headers["X-Auth-Key"] = options.apiKey;
 		}
 		this.headers["Content-Type"] = "application/json";
+
+		this.timeout = options.connectionOptions.timeout * 60;
+		this.maxRetries = options.connectionOptions.maxRetries;
 	}
 
 	/**
@@ -41,18 +45,13 @@ export class Cloudflare {
 	 * @returns The zones for the specified account
 	 */
 	public async getZones(name: string): Promise<Zone> {
-		const response = await axios.get(`${Cloudflare.API_BASE_URL}/zones`, {
-			headers: this.headers,
-			params: {
-				name
-			},
-			timeout: this.connectionOptions.timeout * 60
-		});
-		if (response.status !== HttpStatusCode.Ok) {
-			Promise.reject(new Error(`Failed to get zones: ${response.statusText}`));
-		}
-		
-		return (response.data.result as Zone[])[0];
+		const data = await this.doRequest(RequestType.GET,
+			`${Cloudflare.API_BASE_URL}/zones`,
+			{ name },
+			null
+		);
+
+		return (data.result as Zone[])[0];
 	}
 
 	/**
@@ -62,17 +61,13 @@ export class Cloudflare {
 	 * @returns The DNS records for the specified zone
 	 */
 	public async getDnsRecords(zoneId: string, recordName: string): Promise<DnsRecord[]> {
-		const response = await axios.get(`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records`, {
-			headers: this.headers,
-			params: {
-				name: recordName
-			},
-			timeout: this.connectionOptions.timeout * 60
-		});
-		if (response.status !== HttpStatusCode.Ok) {
-			Promise.reject(new Error(`Failed to get DNS records: ${response.statusText}`))
-		}
-		return response.data.result as DnsRecord[];
+		const data = await this.doRequest(RequestType.GET,
+			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records`,
+			{ name: recordName },
+			null
+		);
+
+		return data.result as DnsRecord[];
 	}
 
 	/**
@@ -82,19 +77,16 @@ export class Cloudflare {
 	 * @param recData The data to update the record with
 	 */
 	public async updateDnsRecord(zoneId: string, recordId: string, recData: RecordData): Promise<void> {
-		const response = await axios.put(`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`, {
+		await this.doRequest(RequestType.PUT,
+			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`,
+			null,
+			{
 				type: (recData.ip.includes(":") ? "AAAA" : "A"),
 				name: recData.name,
 				content: recData.ip,
 				ttl: recData.ttl,
 				proxied: recData.proxied,
-			}, {
-				headers: this.headers,
-				timeout: this.connectionOptions.timeout * 60
 			});
-		if (response.status !== HttpStatusCode.Ok) {
-			Promise.reject(new Error(`Failed to get DNS records: ${response.statusText}`))
-		}
 	}
 
 	/**
@@ -107,4 +99,51 @@ export class Cloudflare {
 				(options.apiEmail != null && options.apiKey != null &&
 				options.apiKey.length > 0 && options.apiEmail.length > 0);
 	}
+
+	/**
+	 * Performs a request to the Cloudflare API
+	 * @param type The request type
+	 * @param url The URL to request
+	 * @param parmas URL parameters
+	 * @param data Body data
+	 * @returns The response data
+	 */
+	private async doRequest(type: RequestType, url: string, parmas: any, data: any): Promise<any> {
+		let requestFn;
+		switch(type) {
+			case RequestType.GET:
+				requestFn = axios.get;
+				break;
+			case RequestType.PUT:
+				requestFn = axios.put;
+				break;
+			default:
+				throw new Error("Invalid request type");
+		}
+		
+		let currentTry = 0;
+		while(currentTry < this.maxRetries) {
+			const response = await requestFn(url, {
+				params: parmas,
+				data,
+				config: {
+					headers: this.headers,
+					timeout: this.timeout * 60
+				}
+			});
+			if (response.status !== HttpStatusCode.Ok) {
+				console.warn(`Request failed with status code ${response.status}. Retrying in ${Cloudflare.RETRY_DELAY}ms...`);
+				await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
+				currentTry++;
+			}
+			return response.data;
+		}
+		
+		throw new Error("Request failed after maximum retries");
+	}
+}
+
+enum RequestType {
+	GET,
+	PUT
 }
