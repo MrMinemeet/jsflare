@@ -58,6 +58,7 @@ export type RecordType = "A" | "AAAA" | undefined;
 
 export interface RecordData {
 	ip: string;
+	name: string;
 	proxied: boolean;
 	ttl: number;
 }

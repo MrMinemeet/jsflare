@@ -79,19 +79,19 @@ export class Cloudflare {
 	 * Updates a DNS record entry
 	 * @param zoneId The zone ID to update the record in
 	 * @param recordId The record ID to update
-	 * @param data The data to update the record with
+	 * @param recData The data to update the record with
 	 */
-	public async updateDnsRecord(zoneId: string, recordId: string, data: RecordData): Promise<void> {
-		const response = await axios.get(`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`, {
-			headers: this.headers,
-			params: {
-				content: data.ip,
-				ttl: data.ttl,
-				proxied: data.proxied,
-				type: (data.ip.includes(":") ? "AAAA" : "A")
-			},
-			timeout: this.connectionOptions.timeout * 60
-		});
+	public async updateDnsRecord(zoneId: string, recordId: string, recData: RecordData): Promise<void> {
+		const response = await axios.put(`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`, {
+				type: (recData.ip.includes(":") ? "AAAA" : "A"),
+				name: recData.name,
+				content: recData.ip,
+				ttl: recData.ttl,
+				proxied: recData.proxied,
+			}, {
+				headers: this.headers,
+				timeout: this.connectionOptions.timeout * 60
+			});
 		if (response.status !== HttpStatusCode.Ok) {
 			Promise.reject(new Error(`Failed to get DNS records: ${response.statusText}`))
 		}
