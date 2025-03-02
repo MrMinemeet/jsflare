@@ -18,7 +18,10 @@ export class Cloudflare {
 	private static readonly API_BASE_URL = "https://api.cloudflare.com/client/v4";
 	private static readonly RETRY_DELAY = 5000;
 
-	private readonly headers: Record<string, string | string[]> = {};
+	private readonly headers: Record<string, string | string[]> = {
+		"User-Agent": "JSflare/0.0",
+		"Accept": "application/json"
+	};
 	private readonly timeout: number;
 	private readonly maxRetries: number;
 
@@ -33,7 +36,6 @@ export class Cloudflare {
 			this.headers["X-Auth-Email"] = options.apiEmail;
 			this.headers["X-Auth-Key"] = options.apiKey;
 		}
-		this.headers["Content-Type"] = "application/json";
 
 		this.timeout = options.connectionOptions.timeout * 60;
 		this.maxRetries = options.connectionOptions.maxRetries;
