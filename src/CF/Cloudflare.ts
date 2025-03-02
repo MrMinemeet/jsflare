@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-import axios, { AxiosHeaders, AxiosRequestConfig, AxiosResponse, HttpStatusCode } from "axios";
+import axios, { HttpStatusCode } from "axios";
 import type { CloudflareOptions, DnsRecord, RecordData, Zone } from "./CloudflareTypes.js";
 
 /**
@@ -18,7 +18,7 @@ export class Cloudflare {
 	private static readonly API_BASE_URL = "https://api.cloudflare.com/client/v4";
 	private static readonly RETRY_DELAY = 5000;
 
-	private readonly headers;
+	private readonly headers: Record<string, string | string[]> = {};
 	private readonly timeout: number;
 	private readonly maxRetries: number;
 
@@ -27,7 +27,6 @@ export class Cloudflare {
 			throw new Error("Options invalid! Has to provide either apiToken, or apiEmail and cloudflareTypes");
 		}
 
-		this.headers = new AxiosHeaders();
 		if(options.apiToken != null) {
 			this.headers["Authorization"] = `Bearer ${options.apiToken}`;
 		} else if (options.apiEmail != null && options.apiKey != null) {
@@ -111,37 +110,38 @@ export class Cloudflare {
 	 * @returns The response data
 	 */
 	private async doRequest(type: RequestType, url: string, params: any, dataBody: any): Promise<any> {
-		let requestFn: (url: string, data?: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>;
-		switch(type) {
-			case RequestType.GET:
-				requestFn = axios.get;
-				break;
-			case RequestType.PUT:
-				requestFn = axios.put;
-				break;
-			default:
-				throw new Error("Invalid request type");
-		}
-
-		axios.interceptors.request.use(request => {
-			console.log("📝 Full Request Config Before Sending:", JSON.stringify(request, null, 2));
-			return request;
-		});
-		
 		
 		let currentTry = 0;
 		while(currentTry < this.maxRetries) {
-			const response = await requestFn(url, dataBody ?? undefined, {
-				params: params ?? undefined,
-				headers: this.headers,
-				timeout: this.timeout
-			});
-			if (response.status !== HttpStatusCode.Ok) {
-				console.warn(`Request failed with status code ${response.status}. Retrying in ${Cloudflare.RETRY_DELAY}ms...`);
-				await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
-				currentTry++;
+			let response;
+			switch(type) {
+				case RequestType.GET:
+					response = await axios.get(url, {
+						params: params ?? undefined,
+						headers: this.headers,
+						timeout: this.timeout
+					});
+					break;
+				case RequestType.PUT:
+					response = await axios.put(url, dataBody, {
+						params: params ?? undefined,
+						headers: this.headers,
+						timeout: this.timeout
+					});
+					break;
+				default:
+					throw new Error("Invalid request type");
 			}
-			return response.data;
+
+			if (response.status === HttpStatusCode.Ok) {
+				return response.data;
+			} else if (400 <= response.status && response.status < 500) {
+				throw new Error(`Request failed with a client error: ${response.status}`);
+			}
+
+			console.warn(`Request failed with status code ${response.status}. Retrying in ${Cloudflare.RETRY_DELAY}ms...`);
+			await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
+			currentTry++;
 		}
 		
 		throw new Error("Request failed after maximum retries");
