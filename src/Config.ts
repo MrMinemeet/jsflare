@@ -5,9 +5,12 @@
 
 import * as fsp from "fs/promises";
 
+const AUTO_TTL = 1;
+const MIN_TTL = 60;
+const MAX_TTL = 86400;
+
 export interface Config {
 	maxRetries: number;
-	/// Between 60 and 86400 seconds
  	timeout: number;
 	items: (TokenItem | EmailKeyItem)[];
 }
@@ -16,6 +19,7 @@ export interface TokenItem {
 	token: string;
 	zone: string;
 	record: string;
+	/// TTL in seconds | 1 = automatic | Value must be between 60 and 86400
 	ttl: number;
 	proxied: boolean;
 }
@@ -48,8 +52,47 @@ function stripComments(jsonc: string): string {
  */
 function parseConfig(jsonc: string): Config {
 	const json = JSON.parse(stripComments(jsonc));
-	// TODO: Validate structure of json
+	validateConfig(json);
 	return json;
+}
+
+/**
+ * Validates a config object.
+ * @param config The config object to validate
+ * @throws If the config is invalid
+ */
+function validateConfig(config: Config): void {
+	if(typeof(config.maxRetries) !== "number" || config.maxRetries < 0) {
+		throw new Error("'maxRetries' must be a non-negative number");
+	}
+	if(typeof(config.timeout) !== "number" || config.timeout < 0) {
+		throw new Error("'timeout' must be a non-negative number");
+	}
+	if (!Array.isArray(config.items)) {
+		throw new Error("'items' must be an array");
+	}
+	for(const item of config.items) {
+		if("token" in item && typeof(item.token) !== "string") {
+			throw new Error("'token' must be a string");
+		} else if("email" in item && "key" in item &&
+			(typeof(item.email) !== "string" || typeof(item.key) !== "string")) {
+			throw new Error("'email' and 'key' must be strings");
+		}
+
+		if(typeof(item.zone) !== "string") {
+			throw new Error("'zone' must be a string");
+		}
+		if(typeof(item.record) !== "string") {
+			throw new Error("'record' must be a string");
+		}
+		if(typeof(item.ttl) !== "number" || 
+			(item.ttl !== AUTO_TTL && (item.ttl < MIN_TTL || item.ttl > MAX_TTL))) {
+			throw new Error(`'ttl' must be a number between ${MIN_TTL} and ${MAX_TTL}, or ${AUTO_TTL} for 'auto'`);
+		}
+		if(typeof(item.proxied) !== "boolean") {
+			throw new Error("'proxied' must be a boolean");
+		}
+	}
 }
 
 /**
