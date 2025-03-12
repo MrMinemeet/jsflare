@@ -1,4 +1,7 @@
 # JSflare - A Dynamic DNS client using Cloudflare
+![GitHub License](https://img.shields.io/github/license/mrminemeet/jsflare)
+![GitHub Tag](https://img.shields.io/github/v/tag/mrminemeet/jsflare)
+
 JSflare is a simple command-line tool that keeps your Cloudflare DNS records updated with your current public IP address. Ideal for users with dynamic IPs who want to host services at home, it supports both Cloudflare API keys and tokens for secure authentication. Configure it easily with a JSON file and let it handle the rest.
 
 ## How does this work?
