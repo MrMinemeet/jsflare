@@ -68,8 +68,8 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 	await cf.updateDnsRecord(zone.id, record.id, {
 			ip: ip,
 			name: record.name,
-			proxied: record.proxied,
-			ttl: record.ttl,
+			proxied: item.proxied,
+			ttl: item.ttl,
 		});
 
 	console.info(`Updated IP for ${item.record} in zone ${zone.name} to ${ip}`);
