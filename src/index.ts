@@ -5,10 +5,15 @@
 import { Cloudflare } from "./CF/Cloudflare.js";
 import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
 
+// -----------------------------------------------------------------------------
+interface IpifyResponse {
+	ip: string;
+}
+
+// -----------------------------------------------------------------------------
 const SUPPORTED_RECORD_TYPES = [ "A", "AAAA" ]
 
 await main();
-
 
 /**
  * The main function of the script
@@ -80,8 +85,20 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
  * @returns The public IP of the machine
  */
 async function getOwnIp(): Promise<string> {
-	const response = await fetch("https://api64.ipify.org");
-	return await response.text();
+	try {
+		const response = await fetch("https://api64.ipify.org?format=json");
+		
+		if (!response.ok) {
+			throw new Error(`Failed to fetch IP: ${response.status} ${response.statusText}`);
+		}
+		
+		const data = await response.json() as IpifyResponse;
+		return data.ip;
+
+	} catch (error) {
+		console.error("Failed to get own IP:", error);
+		throw error;
+	}
 }
 
 /**
