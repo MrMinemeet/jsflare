@@ -30,7 +30,7 @@ export class Cloudflare {
 			throw new Error("Options invalid! Has to provide either apiToken, or apiEmail and cloudflareTypes");
 		}
 
-		if(options.apiToken != null) {
+		if (options.apiToken != null) {
 			this.headers["Authorization"] = `Bearer ${options.apiToken}`;
 		} else if (options.apiEmail != null && options.apiKey != null) {
 			this.headers["X-Auth-Email"] = options.apiEmail;
@@ -42,7 +42,9 @@ export class Cloudflare {
 	}
 
 	/**
-	 * Lists zones for the specified account
+	 * Lists zones for the specified account.
+	 * If multiple zones with the same name exist, the first exact match will be returned.
+	 * If no zone with the specified name exists, an error will be thrown.
 	 * @param name Zone name to filter for
 	 * @returns The zones for the specified account
 	 */
@@ -53,7 +55,17 @@ export class Cloudflare {
 			null
 		);
 
-		return (data.result as Zone[])[0];
+		const zones = data.result as Zone[];
+		const exactMatch = zones
+			.find(zone => zone.name.toLowerCase() === name.toLowerCase());
+
+		if (exactMatch == null) {
+			throw new Error(`Zone with name "${name}" not found.`);
+		}
+		if (zones.length > 1) {
+			console.warn(`Found multiple zones with name "${name}". Using the first exact match.`);
+		}
+		return exactMatch;
 	}
 
 	/**
@@ -99,7 +111,7 @@ export class Cloudflare {
 	 */
 	private static verifyOptions(options: CloudflareOptions): boolean {
 		return (options.apiToken != null && options.apiToken.length > 0) ||
-				(options.apiEmail != null && options.apiKey != null &&
+			(options.apiEmail != null && options.apiKey != null &&
 				options.apiKey.length > 0 && options.apiEmail.length > 0);
 	}
 
@@ -112,11 +124,11 @@ export class Cloudflare {
 	 * @returns The response data
 	 */
 	private async doRequest(type: RequestType, url: string, params: any, dataBody: any): Promise<any> {
-		
+
 		let currentTry = 0;
-		while(currentTry < this.maxRetries) {
+		while (currentTry < this.maxRetries) {
 			let response;
-			switch(type) {
+			switch (type) {
 				case RequestType.GET:
 					response = await axios.get(url, {
 						params: params ?? undefined,
@@ -145,7 +157,7 @@ export class Cloudflare {
 			await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
 			currentTry++;
 		}
-		
+
 		throw new Error("Request failed after maximum retries");
 	}
 }
