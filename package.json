@@ -1,6 +1,6 @@
 {
   "name": "jsflare",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Alexander Voglsperger",
   "license": "MIT",
   "description": "Dynamic DNS using domain hosted on Cloudflare ",
@@ -18,15 +18,15 @@
     "dns"
   ],
   "dependencies": {
-    "axios": "~1.8.4"
+    "axios": "~1.10.0"
   },
   "devDependencies": {
-    "@types/node": "~22.13.14",
+    "@types/node": "~22.13.17",
     "typescript": "~5.7.3"
   },
   "engines": {
     "node": ">=18",
     "deno": ">=1.28"
   },
-  "packageManager": "pnpm@10.5.1+sha512.c424c076bd25c1a5b188c37bb1ca56cc1e136fbf530d98bcb3289982a08fd25527b8c9c4ec113be5e3393c39af04521dd647bcf1d0801eaf8ac6a7b14da313af"
+  "packageManager": "pnpm@10.13.1"
 }
