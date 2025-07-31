@@ -76,7 +76,6 @@ WantedBy=multi-user.target
 ---
 
 ## Dependencies
-* [axios](https://www.npmjs.com/package/axios) is used for making HTTP requests.
 * [ipify](https://www.ipify.org/) is used to get the public IP address.
 
 ## License
