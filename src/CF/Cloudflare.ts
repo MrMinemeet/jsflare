@@ -37,7 +37,7 @@ export class Cloudflare {
 			this.headers["X-Auth-Key"] = options.apiKey;
 		}
 
-		this.timeoutMs = options.connectionOptions.timeout * 60;
+		this.timeoutMs = options.connectionOptions.timeout;
 		this.maxRetries = options.connectionOptions.maxRetries;
 	}
 
@@ -170,9 +170,11 @@ export class Cloudflare {
 
 					case RequestType.PUT:
 						console.debug(`PUT request to '${urlWithParams}'`);
+						const putHeaders = { ...this.headers };
+						putHeaders["Content-Type"] = "application/json";
 						init = {
 							method: "PUT",
-							headers: this.headers,
+							headers: putHeaders,
 							body: JSON.stringify(dataBody),
 							signal: controller.signal
 						};
@@ -184,8 +186,8 @@ export class Cloudflare {
 				const response = await fetch(urlWithParams, init);
 				clearTimeout(timeoutId);
 
-				if (response == null || !response.ok) {
-					throw new Error(`Request failed with status code ${response?.status}`);
+				if (!response.ok) {
+					throw new Error(`Request failed with status code ${response.status}`);
 				}
 
 				return await response.json();
