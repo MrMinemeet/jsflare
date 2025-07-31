@@ -2,9 +2,9 @@
  * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
+import type * as CF_T from "./CloudflareTypes.js";
 
-import axios, { HttpStatusCode } from "axios";
-import type { CloudflareOptions, DnsRecord, RecordData, Zone } from "./CloudflareTypes.js";
+export type Parameters = Record<string, string>;
 
 /**
  * Basic class for interacting with the Cloudflare API
@@ -18,14 +18,14 @@ export class Cloudflare {
 	private static readonly API_BASE_URL = "https://api.cloudflare.com/client/v4";
 	private static readonly RETRY_DELAY = 5000;
 
-	private readonly headers: Record<string, string | string[]> = {
+	private readonly headers: Record<string, string> = {
 		"User-Agent": "JSflare/0.0",
 		"Accept": "application/json"
 	};
-	private readonly timeout: number;
+	private readonly timeoutMs: number;
 	private readonly maxRetries: number;
 
-	constructor(options: CloudflareOptions) {
+	constructor(options: CF_T.CloudflareOptions) {
 		if (!Cloudflare.verifyOptions(options)) {
 			throw new Error("Options invalid! Has to provide either apiToken, or apiEmail and cloudflareTypes");
 		}
@@ -37,7 +37,7 @@ export class Cloudflare {
 			this.headers["X-Auth-Key"] = options.apiKey;
 		}
 
-		this.timeout = options.connectionOptions.timeout * 60;
+		this.timeoutMs = options.connectionOptions.timeout * 60;
 		this.maxRetries = options.connectionOptions.maxRetries;
 	}
 
@@ -48,14 +48,18 @@ export class Cloudflare {
 	 * @param name Zone name to filter for
 	 * @returns The zones for the specified account
 	 */
-	public async getZones(name: string): Promise<Zone> {
+	public async getZones(
+		name: string
+	): Promise<CF_T.Zone> {
 		const data = await this.doRequest(RequestType.GET,
 			`${Cloudflare.API_BASE_URL}/zones`,
-			{ name },
+			{
+				name: name
+			},
 			null
 		);
 
-		const zones = data.result as Zone[];
+		const zones = data.result as CF_T.Zone[];
 		const exactMatch = zones
 			.find(zone => zone.name.toLowerCase() === name.toLowerCase());
 
@@ -74,14 +78,19 @@ export class Cloudflare {
 	 * @param recordName The record name to filter for
 	 * @returns The DNS records for the specified zone
 	 */
-	public async getDnsRecords(zoneId: string, recordName: string): Promise<DnsRecord[]> {
+	public async getDnsRecords(
+		zoneId: string,
+		recordName: string
+	): Promise<CF_T.DnsRecord[]> {
 		const data = await this.doRequest(RequestType.GET,
 			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records`,
-			{ name: recordName },
+			{
+				name: recordName
+			},
 			null
 		);
 
-		return data.result as DnsRecord[];
+		return data.result as CF_T.DnsRecord[];
 	}
 
 	/**
@@ -90,10 +99,14 @@ export class Cloudflare {
 	 * @param recordId The record ID to update
 	 * @param recData The data to update the record with
 	 */
-	public async updateDnsRecord(zoneId: string, recordId: string, recData: RecordData): Promise<void> {
+	public async updateDnsRecord(
+		zoneId: string,
+		recordId: string,
+		recData: CF_T.RecordData
+	): Promise<void> {
 		await this.doRequest(RequestType.PUT,
 			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`,
-			null,
+			undefined,
 			{
 				comment: `Last updated at ${new Date().toISOString()} by JSflare`,
 				content: recData.ip,
@@ -109,7 +122,9 @@ export class Cloudflare {
 	 * @param options The options to verify
 	 * @returns True if the options are valid, false otherwise
 	 */
-	private static verifyOptions(options: CloudflareOptions): boolean {
+	private static verifyOptions(
+		options: CF_T.CloudflareOptions
+	): boolean {
 		return (options.apiToken != null && options.apiToken.length > 0) ||
 			(options.apiEmail != null && options.apiKey != null &&
 				options.apiKey.length > 0 && options.apiEmail.length > 0);
@@ -123,39 +138,58 @@ export class Cloudflare {
 	 * @param dataBody Body data
 	 * @returns The response data
 	 */
-	private async doRequest(type: RequestType, url: string, params: any, dataBody: any): Promise<any> {
-
-		let currentTry = 0;
-		while (currentTry < this.maxRetries) {
-			let response;
-			switch (type) {
-				case RequestType.GET:
-					response = await axios.get(url, {
-						params: params ?? undefined,
-						headers: this.headers,
-						timeout: this.timeout
+	private async doRequest(
+		type: RequestType,
+		url: string,
+		params: Parameters | undefined,
+		dataBody: unknown
+	): Promise<any> {
+		let currentTry = 1;
+		while (currentTry <= this.maxRetries) {
+			try {
+				const urlWithParams = new URL(url);
+				if (params != null) {
+					Object.entries(params).forEach(([key, value]) => {
+						urlWithParams.searchParams.append(key, value);
 					});
-					break;
-				case RequestType.PUT:
-					response = await axios.put(url, dataBody, {
-						params: params ?? undefined,
-						headers: this.headers,
-						timeout: this.timeout
-					});
-					break;
-				default:
-					throw new Error("Invalid request type");
-			}
+				}
 
-			if (response.status === HttpStatusCode.Ok) {
-				return response.data;
-			} else if (400 <= response.status && response.status < 500) {
-				throw new Error(`Request failed with a client error: ${response.status}`);
-			}
+				let init: RequestInit;
+				// TODO: Somehow add timeout to fetch
+				switch (type) {
+					case RequestType.GET:
+						console.debug(`GET request to '${urlWithParams}'`);
+						init = {
+							method: "GET",
+							headers: this.headers
+						};
+						break;
 
-			console.warn(`Request failed with status code ${response.status}. Retrying in ${Cloudflare.RETRY_DELAY}ms...`);
-			await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
-			currentTry++;
+					case RequestType.PUT:
+						console.debug(`PUT request to '${urlWithParams}'`);
+						init = {
+							method: "PUT",
+							headers: this.headers,
+							body: JSON.stringify(dataBody)
+						};
+						break;
+
+					default:
+						throw new Error("Invalid request type");
+				}
+				const response = await fetch(urlWithParams, init);
+
+				if (response == null || !response.ok) {
+					throw new Error(`Request failed with status code ${response?.status}`);
+				}
+
+				return await response.json();
+			} catch (error) {
+				console.warn(`${error} (Retrying in ${Cloudflare.RETRY_DELAY}ms...)`);
+				await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
+				currentTry++;
+				continue;
+			}
 		}
 
 		throw new Error("Request failed after maximum retries");
