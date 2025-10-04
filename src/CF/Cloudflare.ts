@@ -146,9 +146,6 @@ export class Cloudflare {
 	): Promise<any> {
 		let currentTry = 1;
 		while (currentTry <= this.maxRetries) {
-			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
-
 			try {
 				const urlWithParams = new URL(url);
 				if (params != null) {
@@ -163,8 +160,7 @@ export class Cloudflare {
 						console.debug(`GET request to '${urlWithParams}'`);
 						init = {
 							method: "GET",
-							headers: this.headers,
-							signal: controller.signal
+							headers: this.headers
 						};
 						break;
 
@@ -175,16 +171,15 @@ export class Cloudflare {
 						init = {
 							method: "PUT",
 							headers: putHeaders,
-							body: JSON.stringify(dataBody),
-							signal: controller.signal
+							body: JSON.stringify(dataBody)
 						};
 						break;
 
 					default:
 						throw new Error("Invalid request type");
 				}
+				init.signal = AbortSignal.timeout(this.timeoutMs);
 				const response = await fetch(urlWithParams, init);
-				clearTimeout(timeoutId);
 
 				if (!response.ok) {
 					throw new Error(`Request failed with status code ${response.status}`);
@@ -192,7 +187,6 @@ export class Cloudflare {
 
 				return await response.json();
 			} catch (error) {
-				clearTimeout(timeoutId);
 				console.warn(`${error} (Retrying in ${Cloudflare.RETRY_DELAY}ms...)`);
 				await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
 				currentTry++;

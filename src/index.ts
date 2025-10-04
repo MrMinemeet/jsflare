@@ -44,7 +44,7 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 		apiKey: isTokenItem(item) ? undefined : item.key,
 		connectionOptions: {
 			maxRetries,
-			timeout,
+			timeout: timeout * 1000
 		}
 	})
 
