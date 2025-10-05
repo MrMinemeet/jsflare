@@ -157,7 +157,6 @@ export class Cloudflare {
 				let init: RequestInit;
 				switch (type) {
 					case RequestType.GET:
-						console.debug(`GET request to '${urlWithParams}'`);
 						init = {
 							method: "GET",
 							headers: this.headers
@@ -165,7 +164,6 @@ export class Cloudflare {
 						break;
 
 					case RequestType.PUT:
-						console.debug(`PUT request to '${urlWithParams}'`);
 						const putHeaders = { ...this.headers };
 						putHeaders["Content-Type"] = "application/json";
 						init = {
@@ -180,6 +178,16 @@ export class Cloudflare {
 				}
 				init.signal = AbortSignal.timeout(this.timeoutMs);
 				const response = await fetch(urlWithParams, init);
+
+				if (response.status === 429) {
+					// Rate limited, retry after some time
+					const retryAfter = response.headers.get("Retry-After");
+					const waitTimeMs = (retryAfter != null) ? parseInt(retryAfter, 10) * 1000 : Cloudflare.RETRY_DELAY;
+					console.warn(`Rate limited by Cloudflare API. Retrying in ${waitTimeMs}ms...`);
+					currentTry++;
+					await new Promise(resolve => setTimeout(resolve, waitTimeMs));
+					continue;
+				}
 
 				if (!response.ok) {
 					throw new Error(`Request failed with status code ${response.status}`);
