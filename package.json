@@ -1,6 +1,6 @@
 {
   "name": "jsflare",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "author": "Alexander Voglsperger",
   "license": "MIT",
   "description": "Dynamic DNS using domain hosted on Cloudflare ",

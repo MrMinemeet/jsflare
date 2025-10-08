@@ -2,7 +2,7 @@
  * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
-
+import * as path from "path"
 import * as fsp from "fs/promises";
 
 const AUTO_TTL = 1;
@@ -97,16 +97,21 @@ function validateConfig(config: Config): void {
 
 /**
  * Loads the config from 'config.jsonc' or 'config.json' and parses it.
+ * @param cfgPath The path to the config file
  * @returns The parsed config object
  */
-export async function loadConfig(): Promise<Config> {
+export async function loadConfig(cfgPath: string): Promise<Config> {
+	let configDir = path.dirname(cfgPath);
+	if (cfgPath !== "config.jsonc" && configDir !== ".") {
+		configDir = ""
+	}
 	let rawConfig: string;
 	try {
-		rawConfig = await fsp.readFile("config.jsonc", "utf8");
+		rawConfig = await fsp.readFile(path.join(configDir, "config.jsonc"), "utf8");
 	} catch(e) {
 		console.warn("Failed to load 'config.jsonc'. Trying default 'config.json'...");
 		try {
-			rawConfig = await fsp.readFile("config.json", "utf8");
+			rawConfig = await fsp.readFile(path.join(configDir, "config.json"), "utf8");
 		} catch(e) {
 			console.error("Failed to load 'config.json'. Exiting...");
 			process.exit(1);

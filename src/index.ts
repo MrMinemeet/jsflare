@@ -2,6 +2,7 @@
  * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
+import path from "path";
 import { Cloudflare } from "./CF/Cloudflare.js";
 import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
 
@@ -19,7 +20,7 @@ await main();
  * The main function of the script
  */
 async function main() {
-	const { maxRetries, timeout, items} = await loadConfig();
+	const { maxRetries, timeout, items} = await loadConfig(getConfigPath());
 	const ownIp = getOwnIp();
 
 	const results = await Promise.allSettled(items.map(item => 
@@ -108,4 +109,19 @@ async function getOwnIp(): Promise<string> {
  */
 function isTokenItem(item: TokenItem | EmailKeyItem): item is TokenItem {
 	return typeof ((item as TokenItem).token) === "string";
+}
+
+/**
+ * Gets the path to the config file from command line arguments or defaults to 'config.jsonc' in the current directory.
+ * @returns The path to the config file
+ */
+function getConfigPath(): string {
+	const args = process.argv;
+	args.shift(); // Remove 'node'
+	args.shift(); // Remove script path
+	const configArg = args.indexOf("--config");
+	if (args.length >= 2 && configArg !== -1) {
+		return args[configArg + 1];
+	}
+	return path.join(".", "config.jsonc");
 }
