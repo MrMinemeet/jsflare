@@ -116,12 +116,11 @@ function isTokenItem(item: TokenItem | EmailKeyItem): item is TokenItem {
  * @returns The path to the config file
  */
 function getConfigPath(): string {
-	const args = process.argv;
-	args.shift(); // Remove 'node'
-	args.shift(); // Remove script path
-	const configArg = args.indexOf("--config");
-	if (args.length >= 2 && configArg !== -1) {
-		return args[configArg + 1];
+	const args = process.argv.slice(2);
+	
+	const configArgIdx = args.indexOf("--config");
+	if (configArgIdx !== -1 && args[configArgIdx + 1] != null) {
+		return path.resolve(args[configArgIdx + 1]);
 	}
-	return path.join(".", "config.jsonc");
+	return path.resolve("./config.jsonc");
 }
