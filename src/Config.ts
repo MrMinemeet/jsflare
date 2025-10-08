@@ -102,18 +102,18 @@ function validateConfig(config: Config): void {
  */
 export async function loadConfig(cfgPath: string): Promise<Config> {
 	let configDir = path.dirname(cfgPath);
-	if (cfgPath !== "config.jsonc" && configDir !== ".") {
-		configDir = ""
-	}
+	const configJsonC = path.join(configDir, "config.jsonc");
+
 	let rawConfig: string;
 	try {
-		rawConfig = await fsp.readFile(path.join(configDir, "config.jsonc"), "utf8");
+		rawConfig = await fsp.readFile( configJsonC, "utf8");
 	} catch(e) {
-		console.warn("Failed to load 'config.jsonc'. Trying default 'config.json'...");
+		const configJson = path.join(configDir, "config.json");
+		console.warn(`Failed to load '${configJsonC}'. Trying default '${configJson}'...`);
 		try {
 			rawConfig = await fsp.readFile(path.join(configDir, "config.json"), "utf8");
 		} catch(e) {
-			console.error("Failed to load 'config.json'. Exiting...");
+			console.error(`Failed to load '${configJson}'. Exiting...`);
 			process.exit(1);
 		}
 	}
