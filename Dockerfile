@@ -1,7 +1,7 @@
 # ===============================
 # 1️⃣ Build stage: Compile the application
 # ===============================
-FROM node:22-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
 WORKDIR /app
 
 # Install pnpm globally
@@ -18,7 +18,7 @@ RUN pnpm run build
 # ===============================
 # 2️⃣ Runtime stage
 # ===============================
-FROM gcr.io/distroless/nodejs22-debian12
+FROM --platform=$BUILDPLATFORM node:22-alpine
 WORKDIR /app
 
 # Copy built files from builder
