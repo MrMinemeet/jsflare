@@ -1,0 +1,10 @@
+# Ignore everything by default
+*
+
+# Include what is actually needed
+!package.json
+!pnpm-lock.yaml
+!src/
+!docker-entrypoint.sh
+!tsconfig.json
+!LICENSE
