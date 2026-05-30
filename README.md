@@ -24,6 +24,51 @@ The actual script is then found in the `dist` directory and can be run with:
 node dist/index.js
 ```
 
+## Configuration file
+The configuration file is a JSON file that contains the necessary information to update the DNS records. The
+required fields are:
+
+- `maxRetries` (number): How many retries to attempt before giving up. Must be >= 0.
+- `timeout` (number): Seconds to wait before retrying after a failed update. Must be >= 0.
+- `items` (array): List of DNS records to update. Each item supports:
+	- `token` (string, optional): Cloudflare API token for the zone (preferred).
+	- `email` (string, optional): Cloudflare account email (legacy key auth).
+	- `key` (string, optional): Cloudflare API key (legacy key auth).
+	- `zone` (string): The zone name (e.g., `domain.example`).
+	- `record` (string): The full DNS record name to update (e.g., `host.domain.example`).
+	- `ttl` (number): TTL in seconds. `1` means automatic. Valid range is 60-86400.
+	- `proxied` (boolean): Whether the record is proxied through Cloudflare.
+- `postUpdateWebhook` (string, optional): URL to POST to after each update attempt, with the results.
+
+Notes:
+- Provide either `token` or `email` + `key` for each item.
+- `items` can contain a mix of token and legacy key entries.
+
+### Webhook data
+If `postUpdateWebhook` is set, the script will send a POST request to the specified URL.
+This update is triggered on each run, so even when nothing was updated. The idea is to allow users to see if the script is actually running (e.g. health checks).  
+The payload will be a JSON object with the following structure:
+```json
+{
+	timestamp: "2026-01-01T00:00:00.000Z", // ISO string of the time the update was attempted
+	publicIp: "1.2.3.4", // The public IP address that was detected
+	records: [
+		{
+			record: "host1.domain.example", // The record that was updated,
+			success: true, // Whether the update was successful
+			error: null // If the update failed, this will contain the error message
+		},
+		{
+			record: "host2.domain.example", // The record that was updated,
+			success: false, // Whether the update was successful
+			error: "Failed to update record" // If the update failed, this will contain the error message
+		}
+		...
+	]
+}
+
+```
+
 ## API access & permissions
 The script can work with either the legacy API keys or the new API tokens.
 The prefered way are the tokens, which are more secure and can be more granularly controlled, and in general limit actions to the required minimum.

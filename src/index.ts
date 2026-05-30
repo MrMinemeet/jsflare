@@ -11,8 +11,18 @@ interface IpifyResponse {
 	ip: string;
 }
 
+interface UpdateWebhookData {
+	timestamp: string;
+	publicIp: string;
+	records: Array<{
+		record: string;
+		success: boolean;
+		error: string | undefined;
+	}>;
+}
+
 // -----------------------------------------------------------------------------
-const SUPPORTED_RECORD_TYPES = [ "A", "AAAA" ]
+const SUPPORTED_RECORD_TYPES = ["A", "AAAA"]
 
 await main();
 
@@ -20,19 +30,67 @@ await main();
  * The main function of the script
  */
 async function main() {
-	const { maxRetries, timeout, items} = await loadConfig(getConfigPath());
+	const { maxRetries, timeout, items, postUpdateWebhook } = await loadConfig(getConfigPath());
 	const ownIp = getOwnIp();
 
-	const results = await Promise.allSettled(items.map(item => 
-		updateEntry(ownIp, item,  maxRetries, timeout)
+	const results = await Promise.allSettled(items.map(item =>
+		updateEntry(ownIp, item, maxRetries, timeout)
 	));
 
-	results
-		.filter(r => r.status === "rejected")
-		.forEach(r => {
-			console.error("Something went wrong:", r.status, r.reason);
+	const errors = results.filter(r => r.status === "rejected");
+	if (errors.length === 0) {
+		console.info("All records updated successfully");
+	} else {
+		console.error(`${errors.length} record(s) failed to update`);
+	}
+
+	if (postUpdateWebhook != null) {
+		await updateWebhook(postUpdateWebhook, {
+			timestamp: new Date().toISOString(),
+			publicIp: await ownIp,
+			records: items.map((item, idx) => ({
+				record: item.record,
+				success: results[idx].status === "fulfilled",
+				error: results[idx].status === "rejected" ? String(results[idx].reason.messag) : undefined
+			}))
 		});
+	}
+		
 }
+
+/**
+ * Sends a POST request to the specified webhook URL
+ * @param url webhook URL to send the request to
+ * @param data  data to send in the request body
+ * @returns A promise that resolves when the request is complete
+ * @remarks Retries up to 3 times if the request fails
+ */
+async function updateWebhook(url: string, data: UpdateWebhookData): Promise<void> {
+	const MAX_ATTEMPTS = 3;
+
+	const requestInit: RequestInit = {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify(data)
+	};
+
+	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+		try {
+			const response = await fetch(url, requestInit);
+			if (response.ok) {
+				return;
+			}
+			throw new Error(`Webhook responded with ${response.status} ${response.statusText}`);
+		} catch (error) {
+			if (attempt === MAX_ATTEMPTS) {
+				console.error("Failed to send post-update webhook:", error);
+				return;
+			}
+		}
+	}
+};
 
 /**
  * Updates the IP of a DNS record in Cloudflare
@@ -54,10 +112,11 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 	const record = (await cf.getDnsRecords(zone.id, item.record))
 		.find(rec => rec.type != null && SUPPORTED_RECORD_TYPES.includes(rec.type))
 
-	
+
 	if (record == null) {
-		console.warn(`No record found for ${item.record} in zone ${zone.name}`);
-		return;
+		const msg = `No record found for ${item.record} in zone ${zone.name}`;
+		console.warn(msg);
+		throw new Error(msg);
 	}
 
 	// A, AAAA have the IP stored in the 'content' field
@@ -69,14 +128,14 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 		console.info(`IP for ${item.record} in zone ${zone.name} is already up-to-date`);
 		return;
 	}
-	
+
 	// Update the record
 	await cf.updateDnsRecord(zone.id, record.id, {
-			ip: ip,
-			name: record.name,
-			proxied: item.proxied,
-			ttl: item.ttl,
-		});
+		ip: ip,
+		name: record.name,
+		proxied: item.proxied,
+		ttl: item.ttl,
+	});
 
 	console.info(`Updated IP for ${item.record} in zone ${zone.name} to ${ip}`);
 }
@@ -117,7 +176,7 @@ function isTokenItem(item: TokenItem | EmailKeyItem): item is TokenItem {
  */
 function getConfigPath(): string {
 	const args = process.argv.slice(2);
-	
+
 	const configArgIdx = args.indexOf("--config");
 	if (configArgIdx !== -1 && args[configArgIdx + 1] != null) {
 		return path.resolve(args[configArgIdx + 1]);
