@@ -48,7 +48,7 @@ Notes:
 If `postUpdateWebhook` is set, the script will send a POST request to the specified URL.
 This update is triggered on each run, so even when nothing was updated. The idea is to allow users to see if the script is actually running (e.g. health checks).  
 The payload will be a JSON object with the following structure:
-```json
+```jsonc
 {
 	"timestamp": "2026-01-01T00:00:00.000Z", // ISO string of the time the update was attempted
 	"publicIp": "1.2.3.4", // The public IP address that was detected
@@ -56,14 +56,13 @@ The payload will be a JSON object with the following structure:
 		{
 			"record": "host1.domain.example", // The record that was updated,
 			"success": true, // Whether the update was successful
-			"error": undefined // If the update failed, this will contain the error message
+			// No "error" when update was successful
 		},
 		{
 			"record": "host2.domain.example", // The record that was updated,
 			"success": false, // Whether the update was successful
 			"error": "Failed to update record" // If the update failed, this will contain the error message
 		}
-		...
 	]
 }
 
