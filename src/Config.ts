@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
+ * Copyright © 2025-2026 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
 import * as path from "path"
@@ -13,6 +13,7 @@ export interface Config {
 	maxRetries: number;
  	timeout: number;
 	items: (TokenItem | EmailKeyItem)[];
+	postUpdateWebhook?: string;
 }
 
 export interface TokenItem {
@@ -92,6 +93,9 @@ function validateConfig(config: Config): void {
 		if(typeof(item.proxied) !== "boolean") {
 			throw new Error("'proxied' must be a boolean");
 		}
+	}
+	if (config.postUpdateWebhook != null && typeof(config.postUpdateWebhook) !== "string") {
+		throw new Error("'postUpdateWebhook' must be a string if provided");
 	}
 }
 

@@ -22,5 +22,7 @@
 			"ttl": 5,
 			"proxied": true
 		}
-	]
+	],
+	// Webhook URL to send a POST request to after an update
+	"postUpdateWebhook": "https://example.com/webhook"
 }
