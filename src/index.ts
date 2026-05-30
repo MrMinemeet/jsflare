@@ -45,17 +45,22 @@ async function main() {
 	}
 
 	if (postUpdateWebhook != null) {
+		const getErrorMsgFn = (reason: unknown): string => reason instanceof Error 
+			? reason.message 
+			: String(reason);
+
 		await updateWebhook(postUpdateWebhook, {
 			timestamp: new Date().toISOString(),
 			publicIp: await ownIp,
 			records: items.map((item, idx) => ({
 				record: item.record,
 				success: results[idx].status === "fulfilled",
-				error: results[idx].status === "rejected" ? String(results[idx].reason.messag) : undefined
+				error: results[idx].status === "rejected"
+					? String(getErrorMsgFn(results[idx].reason))
+					: undefined
 			}))
 		});
 	}
-		
 }
 
 /**
