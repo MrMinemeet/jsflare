@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
+ * Copyright © 2025-2025 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
 import path from "path";
