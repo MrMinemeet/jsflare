@@ -1,13 +1,15 @@
 # JSflare - A Dynamic DNS client using Cloudflare
 ![GitHub License](https://img.shields.io/github/license/mrminemeet/jsflare)
 ![GitHub Tag](https://img.shields.io/github/v/tag/mrminemeet/jsflare)
-
+[![Docker Image Version](https://img.shields.io/docker/pulls/mrminemeet/jsflare)](https://hub.docker.com/r/mrminemeet/jsflare)  
 JSflare is a simple command-line tool that keeps your Cloudflare DNS records updated with your current public IP address. Ideal for users with dynamic IPs who want to host services at home, it supports both Cloudflare API keys and tokens for secure authentication. Configure it easily with a JSON file and let it handle the rest.
 
 ## How does this work?
 Cloudflare hosts your DNS records (besidees a bunch of other things). This script will update your DNS record with your current public IP address. This is useful if you have a dynamic IP address and want to host a server at home.
 
 ## Usage guide
+
+### Manual execution
 The script is intended to be directly called from the command line - although you could import it as a module if you wanted to.
 
 The script requires a configuration file `config.jsonc` or `config.json` to be present. Take the provided [example_config.jsonc](example_config.jsonc) as an example and fill in the required fields.
@@ -22,6 +24,21 @@ pnpm run build
 The actual script is then found in the `dist` directory and can be run with:
 ```bash
 node dist/index.js
+```
+
+### Docker/Podman
+You can also run the script in a Docker container. This allows you to run the script on any system that supports Docker without having to worry about dependencies or Node.js versions.
+To run the script in a container, utilize the image from Docker Hub, which you can run via the following command:
+```bash
+docker run --rm \
+  -v /path/to/config.jsonc:/config/config.jsonc:ro \
+  mrminemeet/jsflare
+```
+or with Podman:
+```bash
+podman run --rm --network=host \
+	-v ./config.jsonc:/config/config.jsonc:ro \
+	localhost/mrminemeet/jsflare
 ```
 
 ## Configuration file

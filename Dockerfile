@@ -23,7 +23,6 @@ WORKDIR /app
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY docker-entrypoint.sh /entrypoint.sh
 
-ENV JSFLARE_CONFIG=/config/config.jsonc
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/nodejs/bin/node", "/app/dist/index.js"]
+CMD ["--config", "/config/config.jsonc"]
