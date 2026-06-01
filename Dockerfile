@@ -1,11 +1,13 @@
 # ===============================
 # 1️⃣ Build stage: Compile the application
 # ===============================
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Install pnpm globally
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install --global corepack@latest && \
+	corepack enable && \
+	corepack prepare pnpm@latest --activate
 
 # Separate pnpm parts to improve caching and avoid cache invalidation when src changes
 COPY package.json pnpm-lock.yaml ./
@@ -18,7 +20,7 @@ RUN pnpm run build
 # ===============================
 # 2️⃣ Runtime stage
 # ===============================
-FROM gcr.io/distroless/nodejs22-debian12
+FROM gcr.io/distroless/nodejs26-debian13
 WORKDIR /app
 
 # Copy built files from builder
