@@ -38,7 +38,7 @@ or with Podman:
 ```bash
 podman run --rm --network=host \
 	-v ./config.jsonc:/config/config.jsonc:ro \
-	localhost/mrminemeet/jsflare
+	mrminemeet/jsflare
 ```
 
 ## Configuration file
