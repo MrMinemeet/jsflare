@@ -125,7 +125,7 @@ export async function loadConfig(cfgPath: string): Promise<Config> {
 	try {
 		return parseConfig(rawConfig);
 	} catch(e) {
-		console.error("Failed to parse config. Exiting...");
+		console.error(`Error parsing config: ${(e as Error).message}`);
 		process.exit(1);
 	}
 }
