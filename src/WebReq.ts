@@ -28,11 +28,11 @@ export const AxiosInstance = axios.create({
 				throw new Error("An unknown error occurred during the HTTP request.");
 			}
 
-			const config: (AxiosRequestConfig<unknown> & { _retryCount?: number }) | undefined = error.config
+			const config: (AxiosRequestConfig<unknown> & { _retryCount?: number }) | undefined = error.config;
 			if (config == null) {
 				return Promise.reject(error);
 			}
-			const status = error.response?.status
+			const status = error.response?.status;
 
 			const isRetriableError =
 				status == null || // Network error (no response)

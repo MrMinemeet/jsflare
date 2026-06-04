@@ -23,7 +23,7 @@ interface UpdateWebhookData {
 }
 
 // -----------------------------------------------------------------------------
-const SUPPORTED_RECORD_TYPES = ["A", "AAAA"]
+const SUPPORTED_RECORD_TYPES = ["A", "AAAA"];
 
 await main();
 
@@ -90,12 +90,12 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 		apiToken: isTokenItem(item) ? item.token : undefined,
 		apiEmail: isTokenItem(item) ? undefined : item.email,
 		apiKey: isTokenItem(item) ? undefined : item.key
-	})
+	});
 
 	// Get current DNS record for zone
 	const zone = await cf.getZones(item.zone);
 	const record = (await cf.getDnsRecords(zone.id, item.record))
-		.find(rec => rec.type != null && SUPPORTED_RECORD_TYPES.includes(rec.type))
+		.find(rec => rec.type != null && SUPPORTED_RECORD_TYPES.includes(rec.type));
 
 
 	if (record == null) {
@@ -116,7 +116,7 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
 
 	// Update the record
 	await cf.updateDnsRecord(zone.id, record.id, {
-		ip: ip,
+		ip,
 		name: record.name,
 		proxied: item.proxied,
 		ttl: item.ttl,
