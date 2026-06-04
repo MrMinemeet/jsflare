@@ -17,6 +17,11 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm run build
 
+# Remove dev dependencies
+RUN rm -rf node_modules && \
+	pnpm i --prod --frozen-lockfile && \
+	pnpm prune --prod
+
 # ===============================
 # 2️⃣ Runtime stage
 # ===============================
@@ -25,6 +30,7 @@ WORKDIR /app
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 
 ENTRYPOINT ["/nodejs/bin/node", "/app/dist/index.js"]
 CMD ["--config", "/config/config.jsonc"]
