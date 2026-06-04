@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025-2025 Alexander Voglsperger. Licensed under the MIT License.
+ * Copyright © 2025-2026 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
 import path from "path";
@@ -48,15 +48,15 @@ async function main() {
 		const getErrorMsgFn = (reason: unknown): string => reason instanceof Error 
 			? reason.message 
 			: String(reason);
-
+		
 		await updateWebhook(postUpdateWebhook, {
 			timestamp: new Date().toISOString(),
 			publicIp: await ownIp,
 			records: items.map((item, idx) => ({
 				record: item.record,
-				success: results[idx].status === "fulfilled",
-				error: results[idx].status === "rejected"
-					? String(getErrorMsgFn(results[idx].reason))
+				success: results[idx]?.status === "fulfilled",
+				error: results[idx]?.status === "rejected"
+					? String(getErrorMsgFn(results[idx]?.reason))
 					: undefined
 			}))
 		});
@@ -184,7 +184,8 @@ function getConfigPath(): string {
 
 	const configArgIdx = args.indexOf("--config");
 	if (configArgIdx !== -1 && args[configArgIdx + 1] != null) {
-		return path.resolve(args[configArgIdx + 1]);
+		const configPath = args[configArgIdx + 1] as string;
+		return path.resolve(configPath);
 	}
 	return path.resolve("./config.jsonc");
 }

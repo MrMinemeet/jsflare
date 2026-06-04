@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"types": ["node"],
 		"outDir": "dist",
 		"rootDir": "src",
 		"esModuleInterop": true,
@@ -16,7 +17,8 @@
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
 		"removeComments": true,
-		"allowJs": false
+		"allowJs": false,
+		"noUncheckedIndexedAccess": true
 	},
 	"include": [
 		"src/**/*"

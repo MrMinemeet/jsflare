@@ -18,8 +18,8 @@
     "dns"
   ],
   "devDependencies": {
-    "@types/node": "^22.18.8",
-    "typescript": "^5.9.3"
+    "@types/node": "^24.12.4",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=18",
