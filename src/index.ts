@@ -6,7 +6,6 @@ import path from "path";
 import { Cloudflare } from "./CF/Cloudflare.js";
 import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
 import { AxiosInstance } from "./WebReq.js";
-import { AxiosHeaders } from "axios";
 
 // -----------------------------------------------------------------------------
 interface IpifyResponse {
@@ -73,29 +72,12 @@ async function main() {
  * @remarks Retries up to 3 times if the request fails
  */
 async function updateWebhook(url: string, data: UpdateWebhookData): Promise<void> {
-	const MAX_ATTEMPTS = 3;
-
-	const requestInit: RequestInit = {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify(data)
-	};
-
-	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-		try {
-			const response = await fetch(url, requestInit);
-			if (response.ok) {
-				return;
-			}
-			throw new Error(`Webhook responded with ${response.status} ${response.statusText}`);
-		} catch (error) {
-			if (attempt === MAX_ATTEMPTS) {
-				console.error("Failed to send post-update webhook:", error);
-				return;
-			}
-		}
+	try {
+		await AxiosInstance.post(url, data, {
+			headers: { "Accept": "application/json" }
+		});
+	} catch (error) {
+		console.error("Failed to send post-update webhook:", error);
 	}
 };
 
