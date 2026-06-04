@@ -62,7 +62,7 @@ export class Cloudflare {
 			{
 				headers: this.cfHeaders,
 				params: {
-					name: name
+					name
 				}
 			}
 		);
