@@ -5,7 +5,7 @@
 import path from "path";
 import { Cloudflare } from "./CF/Cloudflare.js";
 import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
-import { AxiosInstance } from "./constants.js";
+import { AxiosInstance } from "./WebReq.js";
 import { AxiosHeaders } from "axios";
 
 // -----------------------------------------------------------------------------
