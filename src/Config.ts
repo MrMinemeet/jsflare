@@ -10,8 +10,6 @@ const MIN_TTL = 60;
 const MAX_TTL = 86400;
 
 export interface Config {
-	maxRetries: number;
- 	timeout: number;
 	items: (TokenItem | EmailKeyItem)[];
 	postUpdateWebhook?: string;
 }
@@ -63,12 +61,6 @@ function parseConfig(jsonc: string): Config {
  * @throws If the config is invalid
  */
 function validateConfig(config: Config): void {
-	if(typeof(config.maxRetries) !== "number" || config.maxRetries < 0) {
-		throw new Error("'maxRetries' must be a non-negative number");
-	}
-	if(typeof(config.timeout) !== "number" || config.timeout < 0) {
-		throw new Error("'timeout' must be a non-negative number");
-	}
 	if (!Array.isArray(config.items)) {
 		throw new Error("'items' must be an array");
 	}
