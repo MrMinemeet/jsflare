@@ -1,8 +1,4 @@
 {
-	// Amount of retries before giving up
-	"maxRetries": 2,
-	// Amount of seconds to wait before retrying
-	"timeout": 60,
 	"items": [
 		// Item update using token
 		{

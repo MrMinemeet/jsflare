@@ -31,11 +31,11 @@ await main();
  * The main function of the script
  */
 async function main() {
-	const { maxRetries, timeout, items, postUpdateWebhook } = await loadConfig(getConfigPath());
+	const { items, postUpdateWebhook } = await loadConfig(getConfigPath());
 	const ownIp = getOwnIp();
 
 	const results = await Promise.allSettled(items.map(item =>
-		updateEntry(ownIp, item, maxRetries, timeout)
+		updateEntry(ownIp, item)
 	));
 
 	const errors = results.filter(r => r.status === "rejected");
@@ -85,15 +85,11 @@ async function updateWebhook(url: string, data: UpdateWebhookData): Promise<void
  * Updates the IP of a DNS record in Cloudflare
  * @param item The item to update
  */
-async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKeyItem, maxRetries: number, timeout: number): Promise<void> {
+async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKeyItem): Promise<void> {
 	const cf = new Cloudflare({
 		apiToken: isTokenItem(item) ? item.token : undefined,
 		apiEmail: isTokenItem(item) ? undefined : item.email,
-		apiKey: isTokenItem(item) ? undefined : item.key,
-		connectionOptions: {
-			maxRetries,
-			timeout: timeout * 1000
-		}
+		apiKey: isTokenItem(item) ? undefined : item.key
 	})
 
 	// Get current DNS record for zone

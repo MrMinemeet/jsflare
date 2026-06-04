@@ -45,8 +45,6 @@ podman run --rm --network=host \
 The configuration file is a JSON file that contains the necessary information to update the DNS records. The
 required fields are:
 
-- `maxRetries` (number): How many retries to attempt before giving up. Must be >= 0.
-- `timeout` (number): Seconds to wait before retrying after a failed update. Must be >= 0.
 - `items` (array): List of DNS records to update. Each item supports:
 	- `token` (string, optional): Cloudflare API token for the zone (preferred).
 	- `email` (string, optional): Cloudflare account email (legacy key auth).

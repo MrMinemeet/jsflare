@@ -1,11 +1,25 @@
 /*
- * Copyright © 2025 Alexander Voglsperger. Licensed under the MIT License.
+ * Copyright © 2025-2026 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
+import { AxiosHeaders } from "axios";
 import type * as CF_T from "./CloudflareTypes.js";
+import { AxiosInstance } from "../WebReq.js";
 
-export type Parameters = Record<string, string>;
+// -----------------------------------------------------------------------------
+/**
+ * Options for the Cloudflare class
+ * @param apiToken The API token to use
+ * @param apiEmail The API email to use in combination with the API key
+ * @param apiKey The API key to use in combination with the API email
+ */
+interface CloudflareOptions {
+	apiToken?: string;
+	apiEmail?: string;
+	apiKey?: string;
+}
 
+// -----------------------------------------------------------------------------
 /**
  * Basic class for interacting with the Cloudflare API
  * 
@@ -16,29 +30,21 @@ export type Parameters = Record<string, string>;
  */
 export class Cloudflare {
 	private static readonly API_BASE_URL = "https://api.cloudflare.com/client/v4";
-	private static readonly RETRY_DELAY = 5000;
+	private readonly cfHeaders: AxiosHeaders;
 
-	private readonly headers: Record<string, string> = {
-		"User-Agent": "JSflare/0.0",
-		"Accept": "application/json"
-	};
-	private readonly timeoutMs: number;
-	private readonly maxRetries: number;
-
-	constructor(options: CF_T.CloudflareOptions) {
+	constructor(options: CloudflareOptions) {
 		if (!Cloudflare.verifyOptions(options)) {
-			throw new Error("Options invalid! Has to provide either apiToken, or apiEmail and cloudflareTypes");
+			throw new Error("Options invalid! Has to provide either apiToken, or apiEmail and apiKey");
 		}
 
+		const headers = new AxiosHeaders();
 		if (options.apiToken != null) {
-			this.headers["Authorization"] = `Bearer ${options.apiToken}`;
+			headers.setAuthorization(`Bearer ${options.apiToken}`);
 		} else if (options.apiEmail != null && options.apiKey != null) {
-			this.headers["X-Auth-Email"] = options.apiEmail;
-			this.headers["X-Auth-Key"] = options.apiKey;
+			headers.set("X-Auth-Email", options.apiEmail);
+			headers.set("X-Auth-Key", options.apiKey);
 		}
-
-		this.timeoutMs = options.connectionOptions.timeout;
-		this.maxRetries = options.connectionOptions.maxRetries;
+		this.cfHeaders = headers;
 	}
 
 	/**
@@ -51,15 +57,17 @@ export class Cloudflare {
 	public async getZones(
 		name: string
 	): Promise<CF_T.Zone> {
-		const data = await this.doRequest(RequestType.GET,
+		const response =await AxiosInstance.get(
 			`${Cloudflare.API_BASE_URL}/zones`,
 			{
-				name: name
-			},
-			null
+				headers: this.cfHeaders,
+				params: {
+					name: name
+				}
+			}
 		);
 
-		const zones = data.result as CF_T.Zone[];
+		const zones = response.data.result as CF_T.Zone[];
 		const exactMatch = zones
 			.find(zone => zone.name.toLowerCase() === name.toLowerCase());
 
@@ -82,15 +90,17 @@ export class Cloudflare {
 		zoneId: string,
 		recordName: string
 	): Promise<CF_T.DnsRecord[]> {
-		const data = await this.doRequest(RequestType.GET,
+		const response = await AxiosInstance.get(
 			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records`,
 			{
-				name: recordName
-			},
-			null
+				headers: this.cfHeaders,
+				params: {
+					name: recordName
+				}
+			}
 		);
 
-		return data.result as CF_T.DnsRecord[];
+		return response.data.result as CF_T.DnsRecord[];
 	}
 
 	/**
@@ -104,9 +114,8 @@ export class Cloudflare {
 		recordId: string,
 		recData: CF_T.RecordData
 	): Promise<void> {
-		await this.doRequest(RequestType.PUT,
+		await AxiosInstance.put(
 			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`,
-			undefined,
 			{
 				comment: `Last updated at ${new Date().toISOString()} by JSflare`,
 				content: recData.ip,
@@ -114,7 +123,11 @@ export class Cloudflare {
 				name: recData.name,
 				ttl: recData.ttl,
 				proxied: recData.proxied,
-			});
+			}, 
+			{
+				headers: this.cfHeaders,
+			}
+		);
 	}
 
 	/**
@@ -122,91 +135,9 @@ export class Cloudflare {
 	 * @param options The options to verify
 	 * @returns True if the options are valid, false otherwise
 	 */
-	private static verifyOptions(
-		options: CF_T.CloudflareOptions
-	): boolean {
+	private static verifyOptions(options: CloudflareOptions): boolean {
 		return (options.apiToken != null && options.apiToken.length > 0) ||
 			(options.apiEmail != null && options.apiKey != null &&
 				options.apiKey.length > 0 && options.apiEmail.length > 0);
 	}
-
-	/**
-	 * Performs a request to the Cloudflare API
-	 * @param type The request type
-	 * @param url The URL to request
-	 * @param params URL parameters
-	 * @param dataBody Body data
-	 * @returns The response data
-	 */
-	private async doRequest(
-		type: RequestType,
-		url: string,
-		params: Parameters | undefined,
-		dataBody: unknown
-	): Promise<any> {
-		let currentTry = 1;
-		while (currentTry <= this.maxRetries) {
-			try {
-				const urlWithParams = new URL(url);
-				if (params != null) {
-					Object.entries(params).forEach(([key, value]) => {
-						urlWithParams.searchParams.append(key, value);
-					});
-				}
-
-				let init: RequestInit;
-				switch (type) {
-					case RequestType.GET:
-						init = {
-							method: "GET",
-							headers: this.headers
-						};
-						break;
-
-					case RequestType.PUT:
-						const putHeaders = { ...this.headers };
-						putHeaders["Content-Type"] = "application/json";
-						init = {
-							method: "PUT",
-							headers: putHeaders,
-							body: JSON.stringify(dataBody)
-						};
-						break;
-
-					default:
-						throw new Error("Invalid request type");
-				}
-				init.signal = AbortSignal.timeout(this.timeoutMs);
-				const response = await fetch(urlWithParams, init);
-
-				if (response.status === 429) {
-					// Rate limited, retry after some time
-					const retryAfter = response.headers.get("Retry-After");
-					const waitTimeMs = (retryAfter != null) ? parseInt(retryAfter, 10) * 1000 : Cloudflare.RETRY_DELAY;
-					console.warn(`Rate limited by Cloudflare API. Retrying in ${waitTimeMs}ms...`);
-					currentTry++;
-					await new Promise(resolve => setTimeout(resolve, waitTimeMs));
-					continue;
-				}
-
-				if (!response.ok) {
-					throw new Error(`Request failed with status code ${response.status}`);
-				}
-
-				return await response.json();
-			} catch (error) {
-				console.warn(`${error} (Retrying in ${Cloudflare.RETRY_DELAY}ms...)`);
-				await new Promise(resolve => setTimeout(resolve, Cloudflare.RETRY_DELAY));
-				currentTry++;
-				continue;
-			}
-		}
-
-		throw new Error("Request failed after maximum retries");
-	}
-}
-
-enum RequestType {
-	GET,
-	PUT
 }
