@@ -5,6 +5,8 @@
 import path from "path";
 import { Cloudflare } from "./CF/Cloudflare.js";
 import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
+import * as Constants from "./constants.js"
+import axios, { AxiosHeaders } from "axios";
 
 // -----------------------------------------------------------------------------
 interface IpifyResponse {
@@ -45,10 +47,10 @@ async function main() {
 	}
 
 	if (postUpdateWebhook != null) {
-		const getErrorMsgFn = (reason: unknown): string => reason instanceof Error 
-			? reason.message 
+		const getErrorMsgFn = (reason: unknown): string => reason instanceof Error
+			? reason.message
 			: String(reason);
-		
+
 		await updateWebhook(postUpdateWebhook, {
 			timestamp: new Date().toISOString(),
 			publicIp: await ownIp,
@@ -151,15 +153,26 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
  */
 async function getOwnIp(): Promise<string> {
 	try {
-		const response = await fetch("https://api64.ipify.org?format=json");
-		
-		if (!response.ok) {
+		const response = await axios.get<unknown>(
+			"https://api64.ipify.org?format=json",
+			{
+				headers: new AxiosHeaders({
+					"User-Agent": Constants.HTTP.USER_AGENT,
+					"Accept": "application/json"
+				}),
+				timeout: Constants.HTTP.TIMEOUT
+			}
+		);
+
+		if (response.status !== 200) {
 			throw new Error(`Failed to fetch IP: ${response.status} ${response.statusText}`);
 		}
-		
-		const data = await response.json() as IpifyResponse;
-		return data.ip;
 
+		const respData = response.data;
+		if (!isIpifyResponse(respData)) {
+			throw new Error("Invalid response from ipify API");
+		}
+		return respData.ip;
 	} catch (error) {
 		console.error("Failed to get own IP:", error);
 		throw error;
@@ -188,4 +201,14 @@ function getConfigPath(): string {
 		return path.resolve(configPath);
 	}
 	return path.resolve("./config.jsonc");
+}
+
+/**
+ * Checks whether an object is a valid response from the ipify API
+ */
+function isIpifyResponse(obj: unknown): obj is IpifyResponse {
+	return typeof obj === "object" &&
+		obj !== null &&
+		"ip" in obj &&
+		typeof obj.ip === "string";
 }
