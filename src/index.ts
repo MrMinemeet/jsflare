@@ -5,8 +5,8 @@
 import path from "path";
 import { Cloudflare } from "./CF/Cloudflare.js";
 import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
-import * as Constants from "./constants.js"
-import axios, { AxiosHeaders } from "axios";
+import { AxiosInstance } from "./constants.js";
+import { AxiosHeaders } from "axios";
 
 // -----------------------------------------------------------------------------
 interface IpifyResponse {
@@ -153,14 +153,10 @@ async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKe
  */
 async function getOwnIp(): Promise<string> {
 	try {
-		const response = await axios.get<unknown>(
+		const response = await AxiosInstance.get<unknown>(
 			"https://api64.ipify.org?format=json",
 			{
-				headers: new AxiosHeaders({
-					"User-Agent": Constants.HTTP.USER_AGENT,
-					"Accept": "application/json"
-				}),
-				timeout: Constants.HTTP.TIMEOUT
+				headers: { "Accept": "application/json" }
 			}
 		);
 
