@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"types": ["node"],
-		"outDir": "dist",
+		"noEmit": true,
 		"rootDir": "src",
 		"esModuleInterop": true,
 		"strict": true,
@@ -10,19 +10,17 @@
 		"noImplicitAny": true,
 		"strictNullChecks": true,
 		"strictPropertyInitialization": true,
-		"sourceMap": true,
-		"incremental": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
-		"removeComments": true,
 		"allowJs": false,
 		"noUncheckedIndexedAccess": true,
 		"allowUnreachableCode": false,
 		"allowUnusedLabels": false,
 		"forceConsistentCasingInFileNames": true,
-		"pretty": true
+		"allowImportingTsExtensions": true,
+		"verbatimModuleSyntax": true
 	},
 	"include": [
 		"src/**/*"

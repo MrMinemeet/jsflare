@@ -2,8 +2,8 @@
  * Copyright © 2025-2026 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
-import * as path from "path";
-import * as fsp from "fs/promises";
+import * as path from "node:path";
+import * as fsp from "node:fs/promises";
 
 const AUTO_TTL = 1;
 const MIN_TTL = 60;
