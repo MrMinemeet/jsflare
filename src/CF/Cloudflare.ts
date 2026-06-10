@@ -3,8 +3,8 @@
  * See LICENSE in the project root for license information.
  */
 import { AxiosHeaders } from "axios";
-import type * as CF_T from "./CloudflareTypes.js";
-import { AxiosInstance } from "../WebReq.js";
+import type * as CF_T from "./CloudflareTypes.ts";
+import { AxiosInstance } from "../WebReq.ts";
 
 // -----------------------------------------------------------------------------
 /**

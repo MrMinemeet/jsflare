@@ -2,10 +2,10 @@
  * Copyright © 2025-2026 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
-import path from "path";
-import { Cloudflare } from "./CF/Cloudflare.js";
-import { EmailKeyItem, loadConfig, TokenItem } from "./Config.js";
-import { AxiosInstance } from "./WebReq.js";
+import path from "node:path";
+import { Cloudflare } from "./CF/Cloudflare.ts";
+import { type EmailKeyItem, loadConfig, type TokenItem } from "./Config.ts";
+import { AxiosInstance } from "./WebReq.ts";
 
 // -----------------------------------------------------------------------------
 interface IpifyResponse {

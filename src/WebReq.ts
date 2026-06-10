@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-import axios, { AxiosError, AxiosHeaders, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from "axios";
 
 export const AxiosInstance = axios.create({
 	timeout: 5000,
