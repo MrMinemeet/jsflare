@@ -19,8 +19,8 @@
     "dns"
   ],
   "devDependencies": {
-    "@types/node": "^24.12.4",
     "@eslint/js": "^9.29.0",
+    "@types/node": "^24.12.4",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
     "eslint": "^9.29.0",
@@ -30,7 +30,7 @@
     "node": ">=18",
     "deno": ">=1.28"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@11.5.3",
   "dependencies": {
     "axios": "1.17.0"
   }
