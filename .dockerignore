@@ -5,6 +5,4 @@
 !package.json
 !pnpm-lock.yaml
 !src/
-!docker-entrypoint.sh
-!tsconfig.json
 !LICENSE
