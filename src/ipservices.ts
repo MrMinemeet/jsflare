@@ -5,18 +5,42 @@
 
 import { AxiosInstance } from "./WebReq.ts";
 
+// -------------------------------------------------------------
 /**
- * Fetches the public IP of the machine from 'https://ipify.org'
+ * Addresses of services that return the public IP of the machine as a raw string.
+ */
+const rawIpServices = [
+	"https://api64.ipify.org",
+	"https://icanhazip.com"
+] as const;
+
+// -------------------------------------------------------------
+/**
+ * Gets the public IP of the machine by trying multiple sources.
  * @returns The public IP of the machine
  */
-export async function getFromIpify(): Promise<string> {
+export async function getPublicIp(): Promise<string> {
+	for (const url of rawIpServices) {
+		try {
+			console.info(`Attempting to get public IP from '${url}'...`);
+			return await fetchPublicIp(url);
+		} catch (error) {
+			console.warn(`Failed to get IP from '${url}'`, error);
+		}
+	}
+	throw new Error("Failed to get public IP from all supported sources");
+}
+
+/**
+ * Fetches the public IP of the machine from a given URL that returns it as a raw string.
+ * @param url The URL to fetch the public IP from
+ * @returns The public IP of the machine
+ */
+async function fetchPublicIp(url: string): Promise<string> {
 	try {
-		const response = await AxiosInstance.get<unknown>(
-			"https://api64.ipify.org",
-			{
-				headers: { "Accept": "text/plain" }
-			}
-		);
+		const response = await AxiosInstance.get<unknown>(url, {
+			headers: { "Accept": "text/plain" }
+		});
 
 		if (response.status !== 200) {
 			throw new Error(`Failed to fetch IP: ${response.status} ${response.statusText}`);
@@ -24,11 +48,11 @@ export async function getFromIpify(): Promise<string> {
 
 		const respData = response.data;
 		if (typeof respData !== "string" || respData.trim().length === 0) {
-			throw new Error("Invalid response from ipify API");
+			throw new Error(`Invalid response from ${url}`);
 		}
 		return respData.trim();
 	} catch (error) {
-		console.error("Failed to get own IP:", error);
+		console.error(`Failed to get own IP from ${url}:`, error);
 		throw error;
 	}
 }
