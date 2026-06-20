@@ -3,6 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
+import net from "node:net";
 import { AxiosInstance } from "./WebReq.ts";
 
 // -------------------------------------------------------------
@@ -47,7 +48,7 @@ async function fetchPublicIp(url: string): Promise<string> {
 		}
 
 		const respData = response.data;
-		if (typeof respData !== "string" || respData.trim().length === 0) {
+		if (typeof respData !== "string" || net.isIP(respData) === 0) {
 			throw new Error(`Invalid response from ${url}`);
 		}
 		return respData.trim();
