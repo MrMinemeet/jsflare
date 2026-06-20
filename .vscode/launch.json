@@ -11,10 +11,7 @@
 			"skipFiles": [
 				"<node_internals>/**"
 			],
-			"program": "${workspaceFolder}/dist/index.js",
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
-			],
+			"program": "${workspaceFolder}/src/index.ts",
 			"sourceMaps": true,
 			"console": "integratedTerminal"
 		}

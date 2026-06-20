@@ -5,10 +5,6 @@
 
 import { AxiosInstance } from "./WebReq.ts";
 
-interface IpifyResponse {
-	ip: string;
-}
-
 /**
  * Fetches the public IP of the machine from 'https://ipify.org'
  * @returns The public IP of the machine
@@ -16,9 +12,9 @@ interface IpifyResponse {
 export async function getFromIpify(): Promise<string> {
 	try {
 		const response = await AxiosInstance.get<unknown>(
-			"https://api64.ipify.org?format=json",
+			"https://api64.ipify.org",
 			{
-				headers: { "Accept": "application/json" }
+				headers: { "Accept": "text/plain" }
 			}
 		);
 
@@ -27,22 +23,12 @@ export async function getFromIpify(): Promise<string> {
 		}
 
 		const respData = response.data;
-		if (!isIpifyResponse(respData)) {
+		if (typeof respData !== "string" || respData.trim().length === 0) {
 			throw new Error("Invalid response from ipify API");
 		}
-		return respData.ip;
+		return respData.trim();
 	} catch (error) {
 		console.error("Failed to get own IP:", error);
 		throw error;
 	}
-}
-
-/**
- * Checks whether an object is a valid response from the ipify API
- */
-function isIpifyResponse(obj: unknown): obj is IpifyResponse {
-	return typeof obj === "object" &&
-		obj !== null &&
-		"ip" in obj &&
-		typeof obj.ip === "string";
 }
