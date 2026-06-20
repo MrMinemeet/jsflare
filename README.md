@@ -14,16 +14,11 @@ The script is intended to be directly called from the command line - although yo
 
 The script requires a configuration file `config.jsonc` or `config.json` to be present. Take the provided [example_config.jsonc](example_config.jsonc) as an example and fill in the required fields.
 
-To run the script with Node.js you have to install the dependencies and transpile the code first.
-This can be done with the following commands. (The repository uses [pnpm](https://pnpm.io/) as package manager, but you can use `npm` as well.)
+To run the script with Node.js you have to install the dependencies first.
+This can be done with the following commands. (The repository uses [pnpm](https://pnpm.io/) as package manager, but you can use `npm` as well.). Afterwards, the TypeScript code can be directly run with a [supported Node.js](./package.json#29) version.
 ```bash
 pnpm install
-pnpm run build
-```
-
-The actual script is then found in the `dist` directory and can be run with:
-```bash
-node dist/index.js
+node src/index.ts
 ```
 
 ### Docker/Podman
