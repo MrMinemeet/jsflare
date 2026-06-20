@@ -6,7 +6,7 @@ import path from "node:path";
 import { Cloudflare } from "./CF/Cloudflare.ts";
 import { type EmailKeyItem, loadConfig, type TokenItem } from "./Config.ts";
 import { AxiosInstance } from "./WebReq.ts";
-import { getFromIpify } from "./ipservices.ts";
+import { getPublicIp } from "./ipservices.ts";
 
 // -----------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ await main();
  */
 async function main() {
 	const { items, postUpdateWebhook } = await loadConfig(getConfigPath());
-	const ownIp = getFromIpify();
+	const ownIp = getPublicIp();
 
 	const results = await Promise.allSettled(items.map(item =>
 		updateEntry(ownIp, item)
