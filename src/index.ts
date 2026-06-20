@@ -86,10 +86,15 @@ async function updateWebhook(url: string, data: UpdateWebhookData): Promise<void
  * @param item The item to update
  */
 async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKeyItem): Promise<void> {
+	const isTokenItemFn = (item: TokenItem | EmailKeyItem): item is TokenItem => {
+		return typeof ((item as TokenItem).token) === "string";
+	};
+	const isTokenItem = isTokenItemFn(item);
+
 	const cf = new Cloudflare({
-		apiToken: isTokenItem(item) ? item.token : undefined,
-		apiEmail: isTokenItem(item) ? undefined : item.email,
-		apiKey: isTokenItem(item) ? undefined : item.key
+		apiToken: isTokenItem ? item.token : undefined,
+		apiEmail: isTokenItem ? undefined : item.email,
+		apiKey: isTokenItem ? undefined : item.key
 	});
 
 	// Get current DNS record for zone
@@ -151,15 +156,6 @@ async function getOwnIp(): Promise<string> {
 		console.error("Failed to get own IP:", error);
 		throw error;
 	}
-}
-
-/**
- * Checks whether an item is a TokenItem
- * @param item The item to check
- * @returns Whether the item is a TokenItem
- */
-function isTokenItem(item: TokenItem | EmailKeyItem): item is TokenItem {
-	return typeof ((item as TokenItem).token) === "string";
 }
 
 /**
