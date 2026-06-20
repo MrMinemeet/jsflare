@@ -131,6 +131,7 @@ WantedBy=multi-user.target
 
 ## Dependencies
 * [ipify](https://www.ipify.org/) is used to get the public IP address.
+* [Axios](https://axios.rest/) is used to make HTTP requests to the Cloudflare API and the webhook.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
