@@ -5,7 +5,7 @@
 JSflare is a simple command-line tool that keeps your Cloudflare DNS records updated with your current public IP address. Ideal for users with dynamic IPs who want to host services at home, it supports both Cloudflare API keys and tokens for secure authentication. Configure it easily with a JSON file and let it handle the rest.
 
 ## How does this work?
-Cloudflare hosts your DNS records (besidees a bunch of other things). This script will update your DNS record with your current public IP address. This is useful if you have a dynamic IP address and want to host a server at home.
+Cloudflare hosts your DNS records (besidees a bunch of other things). This script will update your DNS record with your current public IP address. This is useful if you have a dynamic IP address and want to host a server at home. 
 
 ## Usage guide
 
@@ -131,6 +131,7 @@ WantedBy=multi-user.target
 
 ## Dependencies
 * [ipify](https://www.ipify.org/) is used to get the public IP address.
+* [icanhazip](https://icanhazip.com/) is used as another service to get public IP address.
 * [Axios](https://axios.rest/) is used to make HTTP requests to the Cloudflare API and the webhook.
 
 ## License

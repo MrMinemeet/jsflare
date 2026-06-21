@@ -1,9 +1,9 @@
 {
   "name": "jsflare",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "Alexander Voglsperger",
   "license": "MIT",
-  "description": "Dynamic DNS using domain hosted on Cloudflare ",
+  "description": "Dynamic DNS using domain hosted on Cloudflare",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
