@@ -25,8 +25,8 @@ export async function getPublicIp(): Promise<string> {
 		try {
 			console.info(`Attempting to get public IP from '${url}'...`);
 			return await fetchPublicIp(url);
-		} catch (error) {
-			console.warn(`Failed to get IP from '${url}'`, error);
+		} catch {
+			console.warn(`Failed to get IP from '${url}'`);
 		}
 	}
 	throw new Error("Failed to get public IP from all supported sources");
@@ -38,22 +38,17 @@ export async function getPublicIp(): Promise<string> {
  * @returns The public IP of the machine
  */
 async function fetchPublicIp(url: string): Promise<string> {
-	try {
-		const response = await AxiosInstance.get<unknown>(url, {
-			headers: { "Accept": "text/plain" }
-		});
+	const response = await AxiosInstance.get<unknown>(url, {
+		headers: { "Accept": "text/plain" }
+	});
 
-		if (response.status !== 200) {
-			throw new Error(`Failed to fetch IP: ${response.status} ${response.statusText}`);
-		}
-
-		const respData = response.data;
-		if (typeof respData !== "string" || net.isIP(respData) === 0) {
-			throw new Error(`Invalid response from ${url}`);
-		}
-		return respData.trim();
-	} catch (error) {
-		console.error(`Failed to get own IP from ${url}:`, error);
-		throw error;
+	if (response.status !== 200) {
+		throw new Error(`Failed to fetch IP: ${response.status} ${response.statusText}`);
 	}
+
+	const respData = response.data;
+	if (typeof respData !== "string" || net.isIP(respData.trim()) === 0) {
+		throw new Error(`Invalid response from ${url}`);
+	}
+	return respData.trim();
 }
