@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"types": ["node"],
 		"noEmit": true,
-		"rootDir": "src",
 		"esModuleInterop": true,
 		"strict": true,
 		"module": "nodenext",
@@ -23,7 +22,8 @@
 		"verbatimModuleSyntax": true
 	},
 	"include": [
-		"src/**/*"
+		"src/**/*",
+		"test/**/*"
 	],
 	"exclude": [
 		"node_modules",
