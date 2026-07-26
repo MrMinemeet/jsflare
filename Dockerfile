@@ -20,13 +20,15 @@ FROM gcr.io/distroless/nodejs26-debian13
 WORKDIR /app
 
 # Copy basic package information
-COPY LICENSE package.json ./
+COPY --chown=nonroot:nonroot LICENSE package.json ./
 
 # Copy code from local to image (no transpilation needed thanks to native TS support)
-COPY ./src ./src
+COPY --chown=nonroot:nonroot ./src ./src
 
 # Copy runtime dependencies from builder
-COPY --from=builder /app/node_modules ./node_modules
+COPY --chown=nonroot:nonroot --from=builder /app/node_modules ./node_modules
+
+USER nonroot:nonroot
 
 ENTRYPOINT ["/nodejs/bin/node", "/app/src/index.ts"]
 CMD ["--config", "/config/config.jsonc"]
