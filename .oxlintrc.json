@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "globals": {
+    "console": "readonly",
+    "process": "readonly",
+    "setTimeout": "readonly"
+  },
+  "categories": {
+    "correctness": "warn"
+  },
+  "rules": {
+    "curly": ["error", "all"],
+    "no-var": "error",
+    "prefer-const": ["error", { "destructuring": "all" }],
+    "object-shorthand": ["error", "always"],
+    "no-implicit-coercion": "error",
+    "yoda": "error",
+    "prefer-template": "error",
+    "no-useless-concat": "error",
+    "radix": "error",
+    "eslint/no-undef": "error",
+    "no-array-constructor": "error",
+    "typescript/no-var-requires": "error",
+    "typescript/ban-types": "off",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/ban-ts-comment": [
+		"error", { "ts-ignore": "allow-with-description" }
+	],
+    "import/no-default-export": "error",
+    "@typescript-eslint/no-namespace": "error"
+  }
+}
