@@ -3,10 +3,11 @@
  * See LICENSE in the project root for license information.
  */
 import path from "node:path";
+
 import { Cloudflare } from "./CF/Cloudflare.ts";
 import { type EmailKeyItem, loadConfig, type TokenItem } from "./Config.ts";
-import { AxiosInstance } from "./WebReq.ts";
 import { getPublicIp } from "./ipservices.ts";
+import { AxiosInstance } from "./WebReq.ts";
 
 // -----------------------------------------------------------------------------
 
@@ -32,9 +33,7 @@ async function main() {
 	const { items, postUpdateWebhook } = await loadConfig(getConfigPath());
 	const ownIp = getPublicIp();
 
-	const results = await Promise.allSettled(items.map(item =>
-		updateEntry(ownIp, item)
-	));
+	const results = await Promise.allSettled(items.map(item => updateEntry(ownIp, item)));
 
 	const errors = results.filter(r => r.status === "rejected");
 	if (errors.length === 0) {
@@ -44,9 +43,7 @@ async function main() {
 	}
 
 	if (postUpdateWebhook != null) {
-		const getErrorMsgFn = (reason: unknown): string => reason instanceof Error
-			? reason.message
-			: String(reason);
+		const getErrorMsgFn = (reason: unknown): string => (reason instanceof Error ? reason.message : String(reason));
 
 		await updateWebhook(postUpdateWebhook, {
 			timestamp: new Date().toISOString(),
@@ -54,10 +51,8 @@ async function main() {
 			records: items.map((item, idx) => ({
 				record: item.record,
 				success: results[idx]?.status === "fulfilled",
-				error: results[idx]?.status === "rejected"
-					? String(getErrorMsgFn(results[idx]?.reason))
-					: undefined
-			}))
+				error: results[idx]?.status === "rejected" ? String(getErrorMsgFn(results[idx]?.reason)) : undefined,
+			})),
 		});
 	}
 }
@@ -72,12 +67,12 @@ async function main() {
 async function updateWebhook(url: string, data: UpdateWebhookData): Promise<void> {
 	try {
 		await AxiosInstance.post(url, data, {
-			headers: { "Accept": "application/json" }
+			headers: { Accept: "application/json" },
 		});
 	} catch (error) {
 		console.error("Failed to send post-update webhook:", error);
 	}
-};
+}
 
 /**
  * Updates the IP of a DNS record in Cloudflare
@@ -85,21 +80,21 @@ async function updateWebhook(url: string, data: UpdateWebhookData): Promise<void
  */
 async function updateEntry(ipPromise: Promise<string>, item: TokenItem | EmailKeyItem): Promise<void> {
 	const isTokenItemFn = (item: TokenItem | EmailKeyItem): item is TokenItem => {
-		return typeof ((item as TokenItem).token) === "string";
+		return typeof (item as TokenItem).token === "string";
 	};
 	const isTokenItem = isTokenItemFn(item);
 
 	const cf = new Cloudflare({
 		apiToken: isTokenItem ? item.token : undefined,
 		apiEmail: isTokenItem ? undefined : item.email,
-		apiKey: isTokenItem ? undefined : item.key
+		apiKey: isTokenItem ? undefined : item.key,
 	});
 
 	// Get current DNS record for zone
 	const zone = await cf.getZones(item.zone);
-	const record = (await cf.getDnsRecords(zone.id, item.record))
-		.find(rec => rec.type != null && SUPPORTED_RECORD_TYPES.includes(rec.type));
-
+	const record = (await cf.getDnsRecords(zone.id, item.record)).find(
+		rec => rec.type != null && SUPPORTED_RECORD_TYPES.includes(rec.type),
+	);
 
 	if (record == null) {
 		const msg = `No record found for ${item.record} in zone ${zone.name}`;

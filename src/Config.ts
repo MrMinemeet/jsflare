@@ -1,9 +1,9 @@
+import * as fsp from "node:fs/promises";
 /*
  * Copyright © 2025-2026 Alexander Voglsperger. Licensed under the MIT License.
  * See LICENSE in the project root for license information.
  */
 import * as path from "node:path";
-import * as fsp from "node:fs/promises";
 
 const AUTO_TTL = 1;
 const MIN_TTL = 60;
@@ -64,29 +64,31 @@ function validateConfig(config: Config): void {
 	if (!Array.isArray(config.items)) {
 		throw new Error("'items' must be an array");
 	}
-	for(const item of config.items) {
-		if("token" in item && typeof(item.token) !== "string") {
+	for (const item of config.items) {
+		if ("token" in item && typeof item.token !== "string") {
 			throw new Error("'token' must be a string");
-		} else if("email" in item && "key" in item &&
-			(typeof(item.email) !== "string" || typeof(item.key) !== "string")) {
+		} else if (
+			"email" in item &&
+			"key" in item &&
+			(typeof item.email !== "string" || typeof item.key !== "string")
+		) {
 			throw new Error("'email' and 'key' must be strings");
 		}
 
-		if(typeof(item.zone) !== "string") {
+		if (typeof item.zone !== "string") {
 			throw new Error("'zone' must be a string");
 		}
-		if(typeof(item.record) !== "string") {
+		if (typeof item.record !== "string") {
 			throw new Error("'record' must be a string");
 		}
-		if(typeof(item.ttl) !== "number" || 
-			(item.ttl !== AUTO_TTL && (item.ttl < MIN_TTL || item.ttl > MAX_TTL))) {
+		if (typeof item.ttl !== "number" || (item.ttl !== AUTO_TTL && (item.ttl < MIN_TTL || item.ttl > MAX_TTL))) {
 			throw new Error(`'ttl' must be a number between ${MIN_TTL} and ${MAX_TTL}, or ${AUTO_TTL} for 'auto'`);
 		}
-		if(typeof(item.proxied) !== "boolean") {
+		if (typeof item.proxied !== "boolean") {
 			throw new Error("'proxied' must be a boolean");
 		}
 	}
-	if (config.postUpdateWebhook != null && typeof(config.postUpdateWebhook) !== "string") {
+	if (config.postUpdateWebhook != null && typeof config.postUpdateWebhook !== "string") {
 		throw new Error("'postUpdateWebhook' must be a string if provided");
 	}
 }
@@ -102,7 +104,7 @@ export async function loadConfig(cfgPath: string): Promise<Config> {
 
 	let rawConfig: string;
 	try {
-		rawConfig = await fsp.readFile( configJsonC, "utf8");
+		rawConfig = await fsp.readFile(configJsonC, "utf8");
 	} catch {
 		const configJson = path.join(configDir, "config.json");
 		console.warn(`Failed to load '${configJsonC}'. Trying default '${configJson}'...`);
@@ -116,7 +118,7 @@ export async function loadConfig(cfgPath: string): Promise<Config> {
 
 	try {
 		return parseConfig(rawConfig);
-	} catch(e) {
+	} catch (e) {
 		console.error(`Error parsing config: ${(e as Error).message}`);
 		process.exit(1);
 	}

@@ -4,16 +4,14 @@
  */
 
 import net from "node:net";
+
 import { AxiosInstance } from "./WebReq.ts";
 
 // -------------------------------------------------------------
 /**
  * Addresses of services that return the public IP of the machine as a raw string.
  */
-const rawIpServices = [
-	"https://api64.ipify.org",
-	"https://icanhazip.com"
-] as const;
+const rawIpServices = ["https://api64.ipify.org", "https://icanhazip.com"] as const;
 
 // -------------------------------------------------------------
 /**
@@ -39,7 +37,7 @@ export async function getPublicIp(): Promise<string> {
  */
 async function fetchPublicIp(url: string): Promise<string> {
 	const response = await AxiosInstance.get<unknown>(url, {
-		headers: { "Accept": "text/plain" }
+		headers: { Accept: "text/plain" },
 	});
 
 	if (response.status !== 200) {

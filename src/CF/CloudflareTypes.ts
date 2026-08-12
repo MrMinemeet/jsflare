@@ -18,14 +18,14 @@ export interface Zone {
  */
 export interface DnsRecord {
 	comment: string;
-	content: string,
+	content: string;
 	name: string;
 	proxied: boolean;
 	ttl: number;
 	type: RecordType;
 	id: string;
 	proxiable: boolean;
-};
+}
 
 /**
  * Not all record types are supported by this project
@@ -43,10 +43,10 @@ export interface ARecord {
 	comment?: string;
 	content?: string;
 	name?: string;
-	proxied?: boolean,
+	proxied?: boolean;
 	/**
 	 * The time to live in seconds
 	 * 1 = auto | Value must be between 60 and 86400
 	 */
-	ttl: number
-} 
+	ttl: number;
+}
