@@ -8,15 +8,14 @@ import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from "axios"
 export const AxiosInstance = axios.create({
 	timeout: 5000,
 	headers: new AxiosHeaders({
-		"User-Agent": "JSflare/0.0"
+		"User-Agent": "JSflare/0.0",
 	}),
 
-	// Recommended by Axios 
+	// Recommended by Axios
 	// https://axios.rest/pages/misc/security.html#%E2%9A%A0%EF%B8%8F-decompression-bomb-unbounded-response-buffering
 	maxContentLength: 10 * 1024 * 1024, // 10 MB
 	maxBodyLength: 10 * 1024 * 1024,
 });
-
 
 {
 	const MAX_ATTEMPTS = 3;
@@ -49,7 +48,7 @@ export const AxiosInstance = axios.create({
 			}
 			config._retryCount += 1;
 
-			const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+			const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 			let retryHandled = false;
 
@@ -60,7 +59,9 @@ export const AxiosInstance = axios.create({
 				if (!isNaN(retryAfterSeconds)) {
 					// Delay in seconds
 					const waitMs = retryAfterSeconds * 1000;
-					console.warn(`Received 429 Too Many Requests. Retrying after ${waitMs} ms (Retry-After: ${retryAfterSeconds} seconds)`);
+					console.warn(
+						`Received 429 Too Many Requests. Retrying after ${waitMs} ms (Retry-After: ${retryAfterSeconds} seconds)`,
+					);
 					await delay(waitMs);
 					retryHandled = true;
 				} else if (!isNaN(retryDate.getTime())) {
@@ -68,7 +69,9 @@ export const AxiosInstance = axios.create({
 					const now = new Date();
 					const waitMs = retryDate.getTime() - now.getTime();
 					if (waitMs > 0) {
-						console.warn(`Received 429 Too Many Requests. Retrying after ${waitMs} ms (Retry-After: ${retryAfterHeader})`);
+						console.warn(
+							`Received 429 Too Many Requests. Retrying after ${waitMs} ms (Retry-After: ${retryAfterHeader})`,
+						);
 						await delay(waitMs);
 						retryHandled = true;
 					}
@@ -82,6 +85,6 @@ export const AxiosInstance = axios.create({
 			}
 
 			return AxiosInstance(config);
-		}
+		},
 	);
 }

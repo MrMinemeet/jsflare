@@ -3,8 +3,9 @@
  * See LICENSE in the project root for license information.
  */
 import { AxiosHeaders } from "axios";
-import type * as CF_T from "./CloudflareTypes.ts";
+
 import { AxiosInstance } from "../WebReq.ts";
+import type * as CF_T from "./CloudflareTypes.ts";
 
 // -----------------------------------------------------------------------------
 /**
@@ -22,10 +23,10 @@ interface CloudflareOptions {
 // -----------------------------------------------------------------------------
 /**
  * Basic class for interacting with the Cloudflare API
- * 
+ *
  * Own implementaton to reduce size, as the official "cloudflare" package provides a lot of things
  * that are not necesary for this project, and this reflects in package size.
- * 
+ *
  * @param options The options to use
  */
 export class Cloudflare {
@@ -54,22 +55,16 @@ export class Cloudflare {
 	 * @param name Zone name to filter for
 	 * @returns The zones for the specified account
 	 */
-	public async getZones(
-		name: string
-	): Promise<CF_T.Zone> {
-		const response =await AxiosInstance.get(
-			`${Cloudflare.API_BASE_URL}/zones`,
-			{
-				headers: this.cfHeaders,
-				params: {
-					name
-				}
-			}
-		);
+	public async getZones(name: string): Promise<CF_T.Zone> {
+		const response = await AxiosInstance.get(`${Cloudflare.API_BASE_URL}/zones`, {
+			headers: this.cfHeaders,
+			params: {
+				name,
+			},
+		});
 
 		const zones = response.data.result as CF_T.Zone[];
-		const exactMatch = zones
-			.find(zone => zone.name.toLowerCase() === name.toLowerCase());
+		const exactMatch = zones.find(zone => zone.name.toLowerCase() === name.toLowerCase());
 
 		if (exactMatch == null) {
 			throw new Error(`Zone with name "${name}" not found.`);
@@ -86,19 +81,13 @@ export class Cloudflare {
 	 * @param recordName The record name to filter for
 	 * @returns The DNS records for the specified zone
 	 */
-	public async getDnsRecords(
-		zoneId: string,
-		recordName: string
-	): Promise<CF_T.DnsRecord[]> {
-		const response = await AxiosInstance.get(
-			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records`,
-			{
-				headers: this.cfHeaders,
-				params: {
-					name: recordName
-				}
-			}
-		);
+	public async getDnsRecords(zoneId: string, recordName: string): Promise<CF_T.DnsRecord[]> {
+		const response = await AxiosInstance.get(`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records`, {
+			headers: this.cfHeaders,
+			params: {
+				name: recordName,
+			},
+		});
 
 		return response.data.result as CF_T.DnsRecord[];
 	}
@@ -109,24 +98,20 @@ export class Cloudflare {
 	 * @param recordId The record ID to update
 	 * @param recData The data to update the record with
 	 */
-	public async updateDnsRecord(
-		zoneId: string,
-		recordId: string,
-		recData: CF_T.RecordData
-	): Promise<void> {
+	public async updateDnsRecord(zoneId: string, recordId: string, recData: CF_T.RecordData): Promise<void> {
 		await AxiosInstance.put(
 			`${Cloudflare.API_BASE_URL}/zones/${zoneId}/dns_records/${recordId}`,
 			{
 				comment: `Last updated at ${new Date().toISOString()} by JSflare`,
 				content: recData.ip,
-				type: (recData.ip.includes(":") ? "AAAA" : "A"),
+				type: recData.ip.includes(":") ? "AAAA" : "A",
 				name: recData.name,
 				ttl: recData.ttl,
 				proxied: recData.proxied,
-			}, 
+			},
 			{
 				headers: this.cfHeaders,
-			}
+			},
 		);
 	}
 
@@ -136,8 +121,12 @@ export class Cloudflare {
 	 * @returns True if the options are valid, false otherwise
 	 */
 	private static verifyOptions(options: CloudflareOptions): boolean {
-		return (options.apiToken != null && options.apiToken.length > 0) ||
-			(options.apiEmail != null && options.apiKey != null &&
-				options.apiKey.length > 0 && options.apiEmail.length > 0);
+		return (
+			(options.apiToken != null && options.apiToken.length > 0) ||
+			(options.apiEmail != null &&
+				options.apiKey != null &&
+				options.apiKey.length > 0 &&
+				options.apiEmail.length > 0)
+		);
 	}
 }
