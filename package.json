@@ -9,8 +9,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "oxlint",
-		"fmt": "oxfmt --write '**/*.ts'",
-		"fmt:check": "oxfmt --check '**/*.ts'",
+    "fmt": "oxfmt --write '**/*.ts'",
+    "fmt:check": "oxfmt --check '**/*.ts'",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc --watch"
   },
@@ -21,10 +21,10 @@
     "dns"
   ],
   "devDependencies": {
-    "@types/node": "^24.13.3",
-		"oxfmt": "^0.63.0",
-    "oxlint": "^1.78.0",
-    "typescript": "^6.0.3"
+    "@types/node": "~24.13.3",
+    "oxfmt": "~0.63.0",
+    "oxlint": "~1.78.0",
+    "typescript": "~7.0.2"
   },
   "engines": {
     "node": ">=24.12 || >=26.0",
